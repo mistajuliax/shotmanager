@@ -71,10 +71,12 @@ def showSecondsInVSE(showSeconds, workspace=None):
 
 
 def clearChannel(scene, channelIndex):
-    sequencesList = list()
-    for seq in scene.sequence_editor.sequences:
-        if channelIndex == seq.channel:
-            sequencesList.append(seq)
+    sequencesList = [
+        seq
+        for seq in scene.sequence_editor.sequences
+        if channelIndex == seq.channel
+    ]
+
     for seq in sequencesList:
         scene.sequence_editor.sequences.remove(seq)
     bpy.ops.sequencer.refresh_all()
@@ -87,23 +89,23 @@ def clearAllChannels(scene):
 
 
 def getChannelClips(scene, channelIndex):
-    sequencesList = list()
-    for seq in scene.sequence_editor.sequences:
-        if channelIndex == seq.channel:
-            sequencesList.append(seq)
-    return sequencesList
+    return [
+        seq
+        for seq in scene.sequence_editor.sequences
+        if channelIndex == seq.channel
+    ]
 
 
 def getNumUsedChannels(scene):
     numChannels = 0
-    for i, seq in enumerate(scene.sequence_editor.sequences):
+    for seq in scene.sequence_editor.sequences:
         numChannels = max(seq.channel, numChannels)
     return numChannels
 
 
 def changeClipsChannel(scene, sourceChannelIndex, targetChannelIndex):
     sourceSequencesList = getChannelClips(scene, sourceChannelIndex)
-    targetSequencesList = list()
+    targetSequencesList = []
 
     if len(sourceSequencesList):
         targetSequencesList = getChannelClips(scene, targetChannelIndex)
@@ -127,7 +129,7 @@ def swapChannels(scene, channelIndexA, channelIndexB):
 
 def muteChannel(scene, channelIndex, mute):
     if scene.sequence_editor is not None:
-        for i, seq in enumerate(scene.sequence_editor.sequences):
+        for seq in scene.sequence_editor.sequences:
             if channelIndex == seq.channel:
                 seq.mute = mute
 

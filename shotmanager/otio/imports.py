@@ -179,26 +179,31 @@ def importTrack(track, trackInd, track_type, timeRange=None, offsetFrameNumber=0
                 if verbose:
                     print(f" -*- clip metadata: {clip.metadata}")
 
-                if "fcp_xml" in clip.metadata:
-                    # print(" -*- fcp_xml is ok")
-                    # print(f"metadata; clip.metadata['fcp_xml']['enabled']: {clip.metadata['fcp_xml']['enabled']}")
-                    if "enabled" in clip.metadata["fcp_xml"]:
-                        clipEnabled = not ("FALSE" == clip.metadata["fcp_xml"]["enabled"])
+                if (
+                    "fcp_xml" in clip.metadata
+                    and "enabled" in clip.metadata["fcp_xml"]
+                ):
+                    clipEnabled = clip.metadata["fcp_xml"]["enabled"] != "FALSE"
                 newClipInVSE.mute = not clipEnabled
 
                 if track_type == "AUDIO":
-                    if "fcp_xml" in clip.metadata:
-                        if "filter" in clip.metadata["fcp_xml"]:
-                            if "effect" in clip.metadata["fcp_xml"]["filter"]:
-                                if "parameter" in clip.metadata["fcp_xml"]["filter"]["effect"]:
-                                    if "parameter" in clip.metadata["fcp_xml"]["filter"]["effect"]:
-                                        if "value" in clip.metadata["fcp_xml"]["filter"]["effect"]["parameter"]:
-                                            volumeVal = float(
-                                                clip.metadata["fcp_xml"]["filter"]["effect"]["parameter"]["value"]
-                                            )
-                                            if verbose:
-                                                print(f" volume value: {volumeVal}")
-                                            newClipInVSE.volume = volumeVal
+                    if (
+                        "fcp_xml" in clip.metadata
+                        and "filter" in clip.metadata["fcp_xml"]
+                        and "effect" in clip.metadata["fcp_xml"]["filter"]
+                        and "parameter"
+                        in clip.metadata["fcp_xml"]["filter"]["effect"]
+                        and "value"
+                        in clip.metadata["fcp_xml"]["filter"]["effect"][
+                            "parameter"
+                        ]
+                    ):
+                        volumeVal = float(
+                            clip.metadata["fcp_xml"]["filter"]["effect"]["parameter"]["value"]
+                        )
+                        if verbose:
+                            print(f" volume value: {volumeVal}")
+                        newClipInVSE.volume = volumeVal
 
                     audio_volume_keyframes = []
                     if clip.metadata is not None:
@@ -261,20 +266,18 @@ def importTrack(track, trackInd, track_type, timeRange=None, offsetFrameNumber=0
                 # )
                 newClipInVSE.frame_final_duration = ow.get_clip_frame_final_duration(clip, fps)
 
-            # bpy.context.window_manager.UAS_vse_render.createNewClip(
-            #     bpy.context.scene,
-            #     media_path,
-            #     trackInd,
-            #     start - otio_clipLocalCutStart,
-            #     offsetStart=otio_clipLocalCutStart,
-            #     offsetEnd=offsetEnd,
-            #     # offsetEnd=end - otio_clipLocalCutStart + trimmedClipDuration,
-            #     # trimmedClipDuration=trimmedClipDuration,
-            #     importVideo=track_type == "VIDEO",
-            #     importAudio=track_type == "AUDIO",
-            # )
-
-    pass
+                    # bpy.context.window_manager.UAS_vse_render.createNewClip(
+                    #     bpy.context.scene,
+                    #     media_path,
+                    #     trackInd,
+                    #     start - otio_clipLocalCutStart,
+                    #     offsetStart=otio_clipLocalCutStart,
+                    #     offsetEnd=offsetEnd,
+                    #     # offsetEnd=end - otio_clipLocalCutStart + trimmedClipDuration,
+                    #     # trimmedClipDuration=trimmedClipDuration,
+                    #     importVideo=track_type == "VIDEO",
+                    #     importAudio=track_type == "AUDIO",
+                    # )
 
 
 def importToVSE(
@@ -298,7 +301,7 @@ def importToVSE(
     # bpy.context.scene.frame_end = 999999
 
     # video
-    if "ALL" == track_type or "VIDEO" == track_type:
+    if track_type in ["ALL", "VIDEO"]:
         for trackInd, editTrack in enumerate(timeline.video_tracks()):
             if videoTracksList is None or (trackInd + 1) in videoTracksList:
                 importTrack(
@@ -311,7 +314,7 @@ def importToVSE(
                 )
 
     # audio
-    if "ALL" == track_type or "AUDIO" == track_type:
+    if track_type in ["ALL", "AUDIO"]:
         for trackInd, editTrack in enumerate(timeline.audio_tracks()):
             if audioTracksList is None or (trackInd + 1) in audioTracksList:
                 importTrack(
@@ -332,36 +335,9 @@ def getSequenceListFromOtio(otioFile):
 
 def getSequenceNameFromMediaName(fileName):
     print("\n\n **** Deprecated : imports.py getSequenceNameFromMediaName !!!")
-    seqName = ""
-
     seq_pattern = "Seq"
     media_name_splited = fileName.split("_")
-    if 2 <= len(media_name_splited):
-        seqName = media_name_splited[1]
-
-    return seqName
-
-    # get file names only
-    file_list = list()
-    for item in media_list:
-        filename = os.path.split(item)[1]
-        file_list.append(os.path.splitext(filename)[0])
-        # print(item)
-
-    # get sequences
-    seq_list = list()
-    seq_pattern = "_seq"
-    for item in file_list:
-        if seq_pattern in item.lower():
-            itemSplited = item.split("_")
-            if 2 <= len(itemSplited):
-                if itemSplited[1] not in seq_list:
-                    seq_list.append(itemSplited[1])
-
-    # for item in seq_list:
-    #     print(item)
-
-    return seq_list
+    return media_name_splited[1] if len(media_name_splited) >= 2 else ""
 
 
 def getSequenceListFromOtioTimeline(timeline):
@@ -374,21 +350,20 @@ def getSequenceListFromOtioTimeline(timeline):
     media_list = ow.get_media_list(timeline, track_type="VIDEO")
 
     # get file names only
-    file_list = list()
+    file_list = []
     for item in media_list:
         filename = os.path.split(item)[1]
         file_list.append(os.path.splitext(filename)[0])
         # print(item)
 
     # get sequences
-    seq_list = list()
+    seq_list = []
     seq_pattern = "_seq"
     for item in file_list:
         if seq_pattern in item.lower():
             itemSplited = item.split("_")
-            if 2 <= len(itemSplited):
-                if itemSplited[1] not in seq_list:
-                    seq_list.append(itemSplited[1])
+            if len(itemSplited) >= 2 and itemSplited[1] not in seq_list:
+                seq_list.append(itemSplited[1])
 
     # for item in seq_list:
     #     print(item)
@@ -417,10 +392,7 @@ def createShotsFromOtio(
     if len(props.getCurrentTake().getShotList()) != 0:
         bpy.ops.uas_shot_manager.take_add(name=Path(otioFile).stem)
 
-    handlesDuration = 0
-    if mediaHaveHandles:
-        handlesDuration = mediaHandlesDuration
-
+    handlesDuration = mediaHandlesDuration if mediaHaveHandles else 0
     try:
         timeline = opentimelineio.adapters.read_from_file(otioFile)
         if len(timeline.video_tracks()):
@@ -436,11 +408,10 @@ def createShotsFromOtio(
                 clipName = clip.name
                 if createCameras:
                     if reformatShotNames:
-                        match = shot_re.search(clipName)
-                        if match:
-                            clipName = scene.UAS_shot_manager_props.new_shot_prefix + match.group(1)
+                        if match := shot_re.search(clipName):
+                            clipName = scene.UAS_shot_manager_props.new_shot_prefix + match[1]
 
-                    cam_ob = utils.create_new_camera("Cam_" + clipName, location=[0.0, i, 0.0])
+                    cam_ob = utils.create_new_camera(f"Cam_{clipName}", location=[0.0, i, 0.0])
                     cam = cam_ob.data
                     cam_ob.color = [uniform(0, 1), uniform(0, 1), uniform(0, 1), 1]
                     cam_ob.rotation_euler = (radians(90), 0.0, radians(90))

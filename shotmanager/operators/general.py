@@ -39,7 +39,7 @@ class UAS_ShotManager_OT_GoToVideoShotManager(Operator):
     def invoke(self, context, event):
 
         vsm_scene = None
-        if "" == self.vseSceneName:
+        if self.vseSceneName == "":
             self.vseSceneName = "VideoShotManager"
         vsm_scene = getSceneVSE(self.vseSceneName, createVseTab=True)
 
@@ -88,7 +88,7 @@ class UAS_ShotManager_OT_FileInfo(Operator):
         subRow.label(text="Fps:")
         subRow.label(text=f"{scene.render.fps}")
 
-        if 1.0 != scene.render.fps_base:
+        if scene.render.fps_base != 1.0:
             subRow = box.row()
             subRow.alert = True
             subRow.separator()
@@ -99,7 +99,7 @@ class UAS_ShotManager_OT_FileInfo(Operator):
         subRow.separator()
         subRow.label(text="Resolution:")
         subRow.label(text=f"{scene.render.resolution_x} x {scene.render.resolution_y}")
-        if 100 != scene.render.resolution_percentage:
+        if scene.render.resolution_percentage != 100:
             subRow = box.row()
             subRow.alert = True
             subRow.separator()

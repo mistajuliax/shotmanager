@@ -43,11 +43,7 @@ class FCurve:
         kf = self.fcurve.keyframe_points.insert(coordinates[0], coordinates[1])
 
     def remove_frames(self, start, end):
-        to_remove = list()
-
-        for k in self.fcurve.keyframe_points:
-            if start < k.co[0] < end:
-                to_remove.append(k)
+        to_remove = [k for k in self.fcurve.keyframe_points if start < k.co[0] < end]
 
         for k in reversed(to_remove):
             self.fcurve.keyframe_points.remove(k)
@@ -73,11 +69,7 @@ class GPFCurve(FCurve):
         pass
 
     def remove_frames(self, start, end):
-        to_remove = list()
-
-        for k in self.fcurve.frames:
-            if start <= k.frame_number <= end:
-                to_remove.append(k)
+        to_remove = [k for k in self.fcurve.frames if start <= k.frame_number <= end]
 
         for k in reversed(to_remove):
             self.fcurve.frames.remove(k)
@@ -129,7 +121,6 @@ def _remove_frames(fcurve: FCurve, start_frame, end_frame, remove_gap):
     fcurve.remove_frames(start_frame - 1, end_frame)
     if remove_gap:
         _offset_frames(fcurve, end_frame, start_frame - end_frame)
-        pass
 
 
 def _offset_frames(fcurve: FCurve, reference_frame, offset):
@@ -149,10 +140,14 @@ def retime_frames(fcurve: FCurve, mode, start_frame=0, end_frame=0, remove_gap=T
     elif mode == "FREEZE":
         for i in range(len(fcurve)):
             key_time, value = fcurve.get_key_coordinates(i)
-            new_keys = list()
+            new_keys = []
             if key_time == start_frame:
-                new_keys.append((key_time, value))
-                new_keys.append((key_time + end_frame - start_frame, value))
+                new_keys.extend(
+                    (
+                        (key_time, value),
+                        (key_time + end_frame - start_frame, value),
+                    )
+                )
 
             if key_time >= start_frame:
                 fcurve.set_key_coordinates(i, (key_time + end_frame - start_frame, value))
@@ -165,7 +160,7 @@ def retime_frames(fcurve: FCurve, mode, start_frame=0, end_frame=0, remove_gap=T
             for v in new_keys:
                 fcurve.insert_frame(v)
 
-    elif mode == "DELETE" or mode == "CLEAR_ANIM":
+    elif mode in ["DELETE", "CLEAR_ANIM"]:
         _remove_frames(fcurve, start_frame, end_frame, remove_gap)
 
     elif mode == "RESCALE":
@@ -191,7 +186,12 @@ def retime_shot(shot, mode, start_frame=0, end_frame=0, remove_gap=True, factor=
             if start_frame < shot.start:
                 shot.start += offset
 
-    elif mode == "FREEZE":
+    elif (
+        mode == "FREEZE"
+        or mode != "DELETE"
+        and mode != "RESCALE"
+        and mode == "CLEAR_ANIM"
+    ):
         pass
 
     elif mode == "DELETE":
@@ -230,43 +230,40 @@ def retime_shot(shot, mode, start_frame=0, end_frame=0, remove_gap=True, factor=
                     shot.end -= offset
                     shot.durationLocked = True
 
-            elif start_frame < shot.start and shot.start < end_frame:
+            elif shot.start < end_frame:
                 if shot.end <= end_frame:
                     shot.durationLocked = False
                     shot.start = start_frame
                     shot.end = start_frame
-                    shot.durationLocked = True
                     shot.enabled = False
                 else:
                     shot.durationLocked = False
                     shot.start = start_frame
                     shot.end -= offset
-                    shot.durationLocked = True
-
+                shot.durationLocked = True
             else:
                 shot.start -= offset
+
+        elif shot.start <= start_frame:
+            if shot.end <= start_frame:
+                pass
+            elif shot.end <= end_frame:
+                shot.end = start_frame  # goes to a non deleted part
+            else:
+                shot.end -= offset
+
+        elif shot.start < end_frame:
+            shot.start = start_frame
+
+            if shot.end <= end_frame:
+                shot.end = start_frame
+                shot.enabled = False
+            else:
+                shot.end -= offset
 
         else:
-            if shot.start <= start_frame:
-                if shot.end <= start_frame:
-                    pass
-                elif shot.end <= end_frame:
-                    shot.end = start_frame  # goes to a non deleted part
-                else:
-                    shot.end -= offset
-
-            elif start_frame < shot.start and shot.start < end_frame:
-                shot.start = start_frame
-
-                if shot.end <= end_frame:
-                    shot.end = start_frame
-                    shot.enabled = False
-                else:
-                    shot.end -= offset
-
-            else:
-                shot.start -= offset
-                shot.end -= offset
+            shot.start -= offset
+            shot.end -= offset
 
     elif mode == "RESCALE":
         offset = (end_frame - start_frame) * (factor - 1)
@@ -277,7 +274,7 @@ def retime_shot(shot, mode, start_frame=0, end_frame=0, remove_gap=True, factor=
                 if end_frame < shot.end:
                     if end_frame < shot.start:
                         shot.start += offset
-                    elif start_frame < shot.start and shot.start <= end_frame:
+                    elif start_frame < shot.start:
                         shot.durationLocked = False
                         shot.end += offset
                         shot.start = (shot.start - pivot) * factor + pivot
@@ -287,102 +284,74 @@ def retime_shot(shot, mode, start_frame=0, end_frame=0, remove_gap=True, factor=
                         shot.end += offset
                         shot.durationLocked = True
 
-                elif start_frame < shot.end and shot.end <= end_frame:
-                    if start_frame < shot.start and shot.start <= end_frame:
+                elif start_frame < shot.end:
+                    if start_frame < shot.start <= end_frame:
                         shot.durationLocked = False
                         shot.end = (shot.end - pivot) * factor + pivot
                         shot.start = (shot.start - pivot) * factor + pivot
-                        shot.durationLocked = True
                     else:
                         shot.durationLocked = False
                         shot.end = (shot.end - pivot) * factor + pivot
-                        shot.durationLocked = True
-
-                else:
-                    pass
-
-            else:
-                # important to offset START first!!
-                if end_frame < shot.start:
-                    shot.start += offset
-                elif start_frame < shot.start and shot.start <= end_frame:
-                    if end_frame < shot.end:
-                        shot.durationLocked = False
-                        shot.start = (
-                            (shot.start - pivot) * factor + pivot + 0.005
-                        )  # approximation to make sure the rounded value is done to the upper value
-                        shot.end += offset
-                        shot.durationLocked = True
-                    else:
-                        shot.durationLocked = False
-                        shot.start = (
-                            (shot.start - pivot) * factor + pivot + 0.005
-                        )  # approximation to make sure the rounded value is done to the upper value
-                        shot.end = (
-                            (shot.end - pivot) * factor + pivot + 0.005
-                        )  # approximation to make sure the rounded value is done to the upper value
-                        shot.durationLocked = True
-
-                else:
-                    if end_frame < shot.end:
-                        shot.durationLocked = False
-                        shot.end += offset
-                        shot.durationLocked = True
-                    elif start_frame < shot.end and shot.end <= end_frame:
-                        shot.durationLocked = False
-                        shot.end = (
-                            (shot.end - pivot) * factor + pivot + 0.005
-                        )  # approximation to make sure the rounded value is done to the upper value
-                        shot.durationLocked = True
-                    else:
-                        pass
-
-        else:
-            if offset > 0:
-                # important to offset END first!!
+                    shot.durationLocked = True
+            elif end_frame < shot.start:
+                shot.start += offset
+            elif start_frame < shot.start:
                 if end_frame < shot.end:
-                    shot.end += offset
-                elif start_frame < shot.end and shot.end <= end_frame:
-                    shot.end = (shot.end - pivot) * factor + pivot
-                else:
-                    pass
-
-                if end_frame < shot.start:
-                    shot.start += offset
-                elif start_frame < shot.start and shot.start <= end_frame:
-                    shot.start = (shot.start - pivot) * factor + pivot
-                else:
-                    pass
-
-            else:
-                # important to offset START first!!
-                if end_frame < shot.start:
-                    shot.start += offset
-                elif start_frame < shot.start and shot.start <= end_frame:
+                    shot.durationLocked = False
                     shot.start = (
                         (shot.start - pivot) * factor + pivot + 0.005
                     )  # approximation to make sure the rounded value is done to the upper value
-                else:
-                    pass
-
-                if end_frame < shot.end:
                     shot.end += offset
-                elif start_frame < shot.end and shot.end <= end_frame:
+                else:
+                    shot.durationLocked = False
+                    shot.start = (
+                        (shot.start - pivot) * factor + pivot + 0.005
+                    )  # approximation to make sure the rounded value is done to the upper value
                     shot.end = (
                         (shot.end - pivot) * factor + pivot + 0.005
                     )  # approximation to make sure the rounded value is done to the upper value
-                else:
-                    pass
-
-    elif mode == "CLEAR_ANIM":
-        pass
+                shot.durationLocked = True
+            elif end_frame < shot.end:
+                shot.durationLocked = False
+                shot.end += offset
+                shot.durationLocked = True
+            elif start_frame < shot.end:
+                shot.durationLocked = False
+                shot.end = (
+                    (shot.end - pivot) * factor + pivot + 0.005
+                )  # approximation to make sure the rounded value is done to the upper value
+                shot.durationLocked = True
+        elif offset > 0:
+                # important to offset END first!!
+            if end_frame < shot.end:
+                shot.end += offset
+            elif start_frame < shot.end:
+                shot.end = (shot.end - pivot) * factor + pivot
+            if end_frame < shot.start:
+                shot.start += offset
+            elif start_frame < shot.start:
+                shot.start = (shot.start - pivot) * factor + pivot
+        else:
+                # important to offset START first!!
+            if end_frame < shot.start:
+                shot.start += offset
+            elif start_frame < shot.start:
+                shot.start = (
+                    (shot.start - pivot) * factor + pivot + 0.005
+                )  # approximation to make sure the rounded value is done to the upper value
+            if end_frame < shot.end:
+                shot.end += offset
+            elif start_frame < shot.end:
+                shot.end = (
+                    (shot.end - pivot) * factor + pivot + 0.005
+                )  # approximation to make sure the rounded value is done to the upper value
 
 
 def retime_vse(scene, mode, start_frame, end_frame, remove_gap=True):
     def insert_time(sed, start_frame, end_frame):
         # This will be a two pass process since we will use operators to cut the clips.
         offset = end_frame - start_frame
-        sequences = list()
+        sequences = []
         for sequence in sed.sequences:
             sequence.select = False
             sequences.append(sequence)
@@ -492,38 +461,35 @@ def retimer(
     actions_done = set()  # Actions can be linked so we must make sure to only retime them once.
     for obj in objects:
         # Standard object keyframes.
-        if apply_on_objects:
-            if obj.animation_data is not None:
-                action = obj.animation_data.action
-                if action is None or action in actions_done:
-                    continue
+        if apply_on_objects and obj.animation_data is not None:
+            action = obj.animation_data.action
+            if action is None or action in actions_done:
+                continue
 
-                for fcurve in action.fcurves:
-                    retime_frames(FCurve(fcurve), *retime_args)
+            for fcurve in action.fcurves:
+                retime_frames(FCurve(fcurve), *retime_args)
 
-                actions_done.add(action)
+            actions_done.add(action)
 
         # Shape keys
-        if apply_on_shape_keys:
-            if (
-                obj.type == "MESH"
-                and obj.data.shape_keys is not None
-                and obj.data.shape_keys.animation_data is not None
-            ):
-                action = obj.data.shape_keys.animation_data.action
-                if action is None or action in actions_done:
-                    continue
+        if apply_on_shape_keys and (
+            obj.type == "MESH"
+            and obj.data.shape_keys is not None
+            and obj.data.shape_keys.animation_data is not None
+        ):
+            action = obj.data.shape_keys.animation_data.action
+            if action is None or action in actions_done:
+                continue
 
-                for fcurve in action.fcurves:
-                    retime_frames(FCurve(fcurve), *retime_args)
+            for fcurve in action.fcurves:
+                retime_frames(FCurve(fcurve), *retime_args)
 
-                actions_done.add(action)
+            actions_done.add(action)
 
         # Grease pencil
-        if apply_on_grease_pencils:
-            if obj.type == "GPENCIL":
-                for layer in obj.data.layers:
-                    retime_frames(GPFCurve(layer), *retime_args)
+        if apply_on_grease_pencils and obj.type == "GPENCIL":
+            for layer in obj.data.layers:
+                retime_frames(GPFCurve(layer), *retime_args)
 
     # VSE
     if apply_on_vse:
@@ -534,14 +500,7 @@ def retimer(
         props = scene.UAS_shot_manager_props
         shotList = props.getShotsList(ignoreDisabled=False)
 
-        if "INSERT" == mode:
+        if mode in {"INSERT", "DELETE", "RESCALE"}:
             retime_args = (mode, start - 1, end - 1, join_gap, factor, pivot)
-        elif "DELETE" == mode:
-            retime_args = (mode, start - 1, end - 1, join_gap, factor, pivot)
-        #  retime_args = (mode, start, end, join_gap, factor, pivot)
-        elif "RESCALE" == mode:
-            retime_args = (mode, start - 1, end - 1, join_gap, factor, pivot)
-            pass
-
         for shot in shotList:
             retime_shot(shot, *retime_args)

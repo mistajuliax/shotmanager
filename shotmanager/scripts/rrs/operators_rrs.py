@@ -63,9 +63,10 @@ class UAS_LaunchRRSRender(Operator):
         print(" UAS_LaunchRRSRender")
 
         props = context.scene.UAS_shot_manager_props
-        settingsDict = dict()
-        settingsDict["publish_rendering_file"] = "C:\\my rendering file.blend"
-        settingsDict["publish_step"] = "Cleaning"
+        settingsDict = {
+            "publish_rendering_file": "C:\\my rendering file.blend",
+            "publish_step": "Cleaning",
+        }
 
         if not props.sceneIsReady():
             return {"CANCELLED"}

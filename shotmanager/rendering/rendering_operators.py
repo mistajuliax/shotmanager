@@ -94,19 +94,19 @@ class UAS_PT_ShotManager_Render(Operator):
     )
 
     @classmethod
-    def description(self, context, properties):
+    def description(cls, context, properties):
         descr = "_"
         # print("properties: ", properties)
         # print("properties action: ", properties.action)
-        if "STILL" == properties.renderMode:
+        if properties.renderMode == "STILL":
             descr = "Render a still image, at current frame and with the current shot"
-        elif "ANIMATION" == properties.renderMode:
+        elif properties.renderMode == "ANIMATION":
             descr = "Render the current shot"
-        elif "ALL" == properties.renderMode:
+        elif properties.renderMode == "ALL":
             descr = "Render all: shots, takes, EDL..."
-        elif "OTIO" == properties.renderMode:
+        elif properties.renderMode == "OTIO":
             descr = "Render the EDL"
-        elif "PLAYBLAST" == properties.renderMode:
+        elif properties.renderMode == "PLAYBLAST":
             descr = "Fast-render the enabled shots to a single video based on the current viewport settings."
 
         return descr
@@ -134,21 +134,21 @@ class UAS_PT_ShotManager_Render(Operator):
         prefs.renderMode = self.renderMode
 
         # update UI
-        if "STILL" == prefs.renderMode:
+        if prefs.renderMode == "STILL":
             props.displayStillProps = True
-        elif "ANIMATION" == prefs.renderMode:
+        elif prefs.renderMode == "ANIMATION":
             props.displayAnimationProps = True
-        elif "ALL" == prefs.renderMode:
+        elif prefs.renderMode == "ALL":
             props.displayAllEditsProps = True
-        elif "OTIO" == prefs.renderMode:
+        elif prefs.renderMode == "OTIO":
             props.displayOtioProps = True
-        elif "PLAYBLAST" == prefs.renderMode:
+        elif prefs.renderMode == "PLAYBLAST":
             props.displayPlayblastProps = True
 
         if not props.sceneIsReady():
             return {"CANCELLED"}
 
-        if "ANIMATION" == prefs.renderMode:
+        if prefs.renderMode == "ANIMATION":
             currentShot = props.getCurrentShot()
             if currentShot is None:
                 utils.ShowMessageBox("Current Shot not found - Rendering aborted", "Render aborted")
@@ -171,10 +171,10 @@ class UAS_PT_ShotManager_Render(Operator):
         #     print("Render aborted before start: " + renderWarnings)
         #     return {"CANCELLED"}
 
-        if "OTIO" == prefs.renderMode:
+        if prefs.renderMode == "OTIO":
             bpy.ops.uas_shot_manager.export_otio()
         else:
-            renderRootPath = props.renderRootPath if "" != props.renderRootPath else "//"
+            renderRootPath = props.renderRootPath if props.renderRootPath != "" else "//"
             bpy.path.abspath(renderRootPath)
             if not (renderRootPath.endswith("/") or renderRootPath.endswith("\\")):
                 renderRootPath += "\\"

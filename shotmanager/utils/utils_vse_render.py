@@ -165,8 +165,7 @@ class UAS_compositeVideoInVSE(Operator):
 
 class UAS_Vse_Render(PropertyGroup):
     def get_inputOverMediaPath(self):
-        val = self.get("inputOverMediaPath", "")
-        return val
+        return self.get("inputOverMediaPath", "")
 
     def set_inputOverMediaPath(self, value):
         self["inputOverMediaPath"] = value
@@ -178,8 +177,7 @@ class UAS_Vse_Render(PropertyGroup):
     inputOverResolution: IntVectorProperty(size=2, default=(1280, 720))
 
     def get_inputBGMediaPath(self):
-        val = self.get("inputBGMediaPath", "")
-        return val
+        return self.get("inputBGMediaPath", "")
 
     def set_inputBGMediaPath(self, value):
         self["inputBGMediaPath"] = value
@@ -214,14 +212,10 @@ class UAS_Vse_Render(PropertyGroup):
             # print("  mediaPath: ", mediaPath)
             mediaType = self.getMediaType(mediaPath)
             # print("  mediaType: ", mediaType)
-            if listAudio:
-                if "SOUND" == mediaType:
-                    if mediaPath not in audioFiles:
-                        audioFiles.append(mediaPath)
-            if listVideo:
-                if "MOVIE" == mediaType:
-                    if mediaPath not in videoFiles:
-                        videoFiles.append(mediaPath)
+            if listAudio and mediaType == "SOUND" and mediaPath not in audioFiles:
+                audioFiles.append(mediaPath)
+            if listVideo and mediaType == "MOVIE" and mediaPath not in videoFiles:
+                videoFiles.append(mediaPath)
         if listAudio:
             mediaList["media_audio"] = audioFiles
         if listVideo:
@@ -232,14 +226,14 @@ class UAS_Vse_Render(PropertyGroup):
     def getClipMediaPath(self, scene, clip):
         mediaPath = None
         # print(f"  clip: {clip.name}, type: {clip.type}")
-        if "SOUND" == clip.type:
+        if clip.type == "SOUND":
             # if clip.name in bpy.data.sounds:
             #     mediaPath = bpy.data.sounds[clip.name].filepath
             # elif clip.name in bpy.context.scene.sequence_editor.sequences_all:
             #     mediaPath = bpy.context.scene.sequence_editor.sequences_all[clip.name].filepath
             mediaPath = bpy.context.scene.sequence_editor.sequences[clip.name].sound.filepath
 
-        elif "MOVIE" == clip.type:
+        elif clip.type == "MOVIE":
             mediaPath = bpy.context.scene.sequence_editor.sequences_all[clip.name].filepath
 
         return bpy.path.abspath(mediaPath)
@@ -254,10 +248,7 @@ class UAS_Vse_Render(PropertyGroup):
         if mediaExt in (".mp4", ".avi", ".mov", ".mkv"):
             mediaType = "MOVIE"
         elif mediaExt in (".jpg", ".jpeg", ".png", ".tga", ".tif", ".tiff"):
-            if -1 != filePath.find("###"):
-                mediaType = "IMAGES_SEQUENCE"
-            else:
-                mediaType = "IMAGE"
+            mediaType = "IMAGES_SEQUENCE" if filePath.find("###") != -1 else "IMAGE"
         elif mediaExt in (".mp3", ".wav", ".aif", ".aiff"):
             mediaType = "SOUND"
         return mediaType
@@ -367,7 +358,7 @@ class UAS_Vse_Render(PropertyGroup):
             camSeq.frame_offset_end = 0
 
             # code not tested...
-            if -1 != final_duration:
+            if final_duration != -1:
                 camSeq.frame_final_duration = final_duration
             # cameraScene.frame_start = OriRangeStart
             # cameraScene.frame_end = OriRangeEnd
@@ -411,13 +402,12 @@ class UAS_Vse_Render(PropertyGroup):
             if padding_match:
                 # scene.render.filepath = str(folder.joinpath(mov_name))
 
-                frames = dict()
+                frames = {}
                 max_frame = 0
                 min_frame = 999999999
                 for f in sorted(list(folder.glob("*"))):
                     _folder, _name = f.parent, f.name
-                    re_match = file_re.match(_name)
-                    if re_match:
+                    if re_match := file_re.match(_name):
                         frame_nb = int(re_match[1])
                         max_frame = max(max_frame, frame_nb)
                         min_frame = min(min_frame, frame_nb)
@@ -434,7 +424,7 @@ class UAS_Vse_Render(PropertyGroup):
                         pp = frames.get(i, Path(""))
                         seq.elements.append(pp.name)
 
-                #   scene.frame_end = max_frame - min_frame + 1
+                    #   scene.frame_end = max_frame - min_frame + 1
 
             return seq
 
@@ -545,10 +535,11 @@ class UAS_Vse_Render(PropertyGroup):
 
     # wkip added to utils_vse
     def clearChannel(self, scene, channelIndex):
-        sequencesList = list()
-        for seq in scene.sequence_editor.sequences:
-            if channelIndex == seq.channel:
-                sequencesList.append(seq)
+        sequencesList = [
+            seq
+            for seq in scene.sequence_editor.sequences
+            if channelIndex == seq.channel
+        ]
 
         for seq in sequencesList:
             scene.sequence_editor.sequences.remove(seq)
@@ -557,12 +548,11 @@ class UAS_Vse_Render(PropertyGroup):
 
     # wkip added to utils_vse
     def getChannelClips(self, scene, channelIndex):
-        sequencesList = list()
-        for seq in scene.sequence_editor.sequences:
-            if channelIndex == seq.channel:
-                sequencesList.append(seq)
-
-        return sequencesList
+        return [
+            seq
+            for seq in scene.sequence_editor.sequences
+            if channelIndex == seq.channel
+        ]
 
     def deselectChannel(self, scene, channelIndex):
         for seq in scene.sequence_editor.sequences:
@@ -578,17 +568,18 @@ class UAS_Vse_Render(PropertyGroup):
         """Modes: "CLEARANDSELECT", "ADD", "REMOVE"
         Returns the resulting selected clips belonging to the track
         """
-        sequencesList = list()
+        sequencesList = []
         for seq in scene.sequence_editor.sequences:
-            if channelIndex == seq.channel:
-                if "REMOVE" == mode:
-                    seq.select = False
-                else:
-                    seq.select = True
-                    sequencesList.append(seq)
-            elif "CLEARANDSELECT" == mode:
+            if (
+                channelIndex == seq.channel
+                and mode == "REMOVE"
+                or channelIndex != seq.channel
+                and mode == "CLEARANDSELECT"
+            ):
                 seq.select = False
-
+            elif channelIndex == seq.channel:
+                seq.select = True
+                sequencesList.append(seq)
         return sequencesList
 
     # wkip added to utils_vse
@@ -599,7 +590,7 @@ class UAS_Vse_Render(PropertyGroup):
     # wkip added to utils_vse
     def changeClipsChannel(self, scene, sourceChannelIndex, targetChannelIndex):
         sourceSequencesList = self.getChannelClips(scene, sourceChannelIndex)
-        targetSequencesList = list()
+        targetSequencesList = []
 
         if len(sourceSequencesList):
             targetSequencesList = self.getChannelClips(scene, targetChannelIndex)
@@ -631,7 +622,9 @@ class UAS_Vse_Render(PropertyGroup):
         clipRealHeight = int(clipHeight * (clipRenderPercentage / 100))
 
         if hasattr(clip, "use_crop"):
-            if "FIT_ALL" == mode or (canvasWidth == clipRealWidth and canvasHeight == clipRealHeight):
+            if mode == "FIT_ALL" or (
+                canvasWidth == clipRealWidth and canvasHeight == clipRealHeight
+            ):
                 clip.use_crop = True
                 clip.crop.min_x = clip.crop.max_x = clip.crop.min_y = clip.crop.max_y = 0
                 clip.use_crop = False
@@ -641,20 +634,19 @@ class UAS_Vse_Render(PropertyGroup):
                 clip.crop.min_x = clip.crop.max_x = 0
                 clip.crop.min_y = clip.crop.max_y = 0
 
-                if "FIT_WIDTH" == mode:
+                if mode == "FIT_WIDTH":
                     clipNewHeight = canvasWidth / clipRealWidth * clipRealHeight
                     clip.crop.min_y = clip.crop.max_y = -0.5 * (clipRenderPercentage / 100) * (canvasHeight - clipNewHeight)
 
-                if "FIT_HEIGHT" == mode:
+                if mode == "FIT_HEIGHT":
                     clipNewWidth = canvasHeight / clipRealHeight * clipRealWidth
                     clip.crop.min_x = clip.crop.max_x = -0.5 * (clipRenderPercentage / 100) * (canvasWidth - clipNewWidth)
 
-                if "NO_RESIZE" == mode:
+                if mode == "NO_RESIZE":
                     clip.crop.min_x = clip.crop.max_x = -0.5 * (clipRenderPercentage / 100) * (canvasWidth - clipRealWidth)
                     clip.crop.min_y = clip.crop.max_y = (
                         -0.5 * (clipRenderPercentage / 100) * (canvasHeight - clipRealHeight)
                     )
-                    pass
 
     def get_frame_end_from_content(self, scene):
         # wkipwkipwkip erreur ici, devrait etre exclusive pour extre consistant et ne l'est pas
@@ -763,8 +755,6 @@ class UAS_Vse_Render(PropertyGroup):
         if not config.uasDebug_keepVSEContent:
             # current scene is sequenceScene
             bpy.ops.scene.delete()
-            pass
-
         bpy.context.window.scene = previousScene
 
     def buildSequenceVideoFromImgSequences(self, mediaDictArr, outputFile, handles, fps):
@@ -806,7 +796,7 @@ class UAS_Vse_Render(PropertyGroup):
         sequenceScene.view_settings.view_transform = "Raw"
 
         atFrame = 0
-        for i, mediaDict in enumerate(mediaDictArr):
+        for mediaDict in mediaDictArr:
             # sequenceScene.sequence_editor
             frameToPaste = self.get_frame_end_from_content(sequenceScene)
             print("\n---- Importing image sequences ----")
@@ -897,7 +887,7 @@ class UAS_Vse_Render(PropertyGroup):
         # print(
         #     f"Render W: {sequenceScene.render.resolution_x} and H: {sequenceScene.render.resolution_y}, %: {sequenceScene.render.resolution_percentage}"
         # )
-        if 100 != sequenceScene.render.resolution_percentage:
+        if sequenceScene.render.resolution_percentage != 100:
             sequenceScene.render.resolution_x = int(
                 sequenceScene.render.resolution_x * sequenceScene.render.resolution_percentage / 100.0
             )
@@ -906,9 +896,9 @@ class UAS_Vse_Render(PropertyGroup):
             )
             sequenceScene.render.resolution_percentage = 100
 
-        if 1 == sequenceScene.render.resolution_x % 2:
+        if sequenceScene.render.resolution_x % 2 == 1:
             sequenceScene.render.resolution_x += 1
-        if 1 == sequenceScene.render.resolution_y % 2:
+        if sequenceScene.render.resolution_y % 2 == 1:
             sequenceScene.render.resolution_y += 1
 
         # print(
@@ -921,8 +911,6 @@ class UAS_Vse_Render(PropertyGroup):
         if not config.uasDebug_keepVSEContent:
             # current scene is sequenceScene
             bpy.ops.scene.delete()
-            pass
-
         # wkip changer ca fait que le time range n'est pas pris en compte...
         # if not config.uasDebug:
         bpy.context.window.scene = previousScene
@@ -936,15 +924,15 @@ class UAS_Vse_Render(PropertyGroup):
         output_resolution: array [with, height]
         """
 
-        specificFrame = None
-        if frame_start == frame_end:
-            specificFrame = frame_start
-
+        specificFrame = frame_start if frame_start == frame_end else None
         previousScene = bpy.context.window.scene
 
         # Add new scene
         # vse_scene = bpy.data.scenes.new(name="Tmp_VSE_RenderScene" + postfixSceneName)
-        vse_scene = utils.getSceneVSE("Tmp_VSE_RenderScene" + postfixSceneName, createVseTab=False)
+        vse_scene = utils.getSceneVSE(
+            f"Tmp_VSE_RenderScene{postfixSceneName}", createVseTab=False
+        )
+
         self.clearAllChannels(vse_scene)
 
         vse_scene.render.fps = fps
@@ -962,11 +950,10 @@ class UAS_Vse_Render(PropertyGroup):
         output_res = [vse_scene.render.resolution_x, vse_scene.render.resolution_y]
         if output_resolution is not None:
             output_res = output_resolution.copy()
-        else:
-            if "" != self.inputBGMediaPath:
-                output_res = self.inputBGResolution.copy()
-            elif "" != self.inputOverMediaPath:
-                output_res = self.inputOverResolution.copy()
+        elif self.inputBGMediaPath != "":
+            output_res = self.inputBGResolution.copy()
+        elif self.inputOverMediaPath != "":
+            output_res = self.inputOverResolution.copy()
 
         vse_scene.render.resolution_x = output_res[0]
         vse_scene.render.resolution_y = output_res[1]
@@ -992,7 +979,7 @@ class UAS_Vse_Render(PropertyGroup):
         vse_scene.view_settings.view_transform = "Filmic"  # "raw"
 
         bgClip = None
-        if "" != self.inputBGMediaPath:
+        if self.inputBGMediaPath != "":
             try:
                 #    print(f"self.inputBGMediaPath: {self.inputBGMediaPath}")
                 bgClip = self.createNewClip(vse_scene, self.inputBGMediaPath, 1, 1)
@@ -1008,15 +995,17 @@ class UAS_Vse_Render(PropertyGroup):
 
             #    print(f"self.inputBGMediaPath: {self.inputOverMediaPath}")
 
-            if bgClip is not None:
-                if output_res[0] < self.inputBGResolution[0] or output_res[1] < self.inputBGResolution[1]:
-                    bgClip.use_crop = True
-                    bgClip.crop.min_x = int((self.inputBGResolution[0] - output_res[0]) / 2)
-                    bgClip.crop.max_x = bgClip.crop.min_x
-                    bgClip.crop.min_y = int((self.inputBGResolution[1] - output_res[1]) / 2)
-                    bgClip.crop.max_y = bgClip.crop.min_y
+            if bgClip is not None and (
+                output_res[0] < self.inputBGResolution[0]
+                or output_res[1] < self.inputBGResolution[1]
+            ):
+                bgClip.use_crop = True
+                bgClip.crop.min_x = int((self.inputBGResolution[0] - output_res[0]) / 2)
+                bgClip.crop.max_x = bgClip.crop.min_x
+                bgClip.crop.min_y = int((self.inputBGResolution[1] - output_res[1]) / 2)
+                bgClip.crop.max_y = bgClip.crop.min_y
 
-        if "" != self.inputOverMediaPath:
+        if self.inputOverMediaPath != "":
             overClip = None
             try:
                 overClip = self.createNewClip(vse_scene, self.inputOverMediaPath, 2, 1)
@@ -1029,22 +1018,23 @@ class UAS_Vse_Render(PropertyGroup):
             # else:
             #     print(f" *** Rendered shot not found: {self.inputOverMediaPath}")
 
-            if overClip is not None:
-                if output_res[0] < self.inputOverResolution[0] or output_res[1] < self.inputOverResolution[1]:
-                    overClip.use_crop = True
-                    overClip.crop.min_x = int((self.inputOverResolution[0] - output_res[0]) / 2)
-                    overClip.crop.max_x = overClip.crop.min_x
-                    overClip.crop.min_y = int((self.inputOverResolution[1] - output_res[1]) / 2)
-                    overClip.crop.max_y = overClip.crop.min_y
-                    overClip.blend_type = "OVER_DROP"
+            if overClip is not None and (
+                output_res[0] < self.inputOverResolution[0]
+                or output_res[1] < self.inputOverResolution[1]
+            ):
+                overClip.use_crop = True
+                overClip.crop.min_x = int((self.inputOverResolution[0] - output_res[0]) / 2)
+                overClip.crop.max_x = overClip.crop.min_x
+                overClip.crop.min_y = int((self.inputOverResolution[1] - output_res[1]) / 2)
+                overClip.crop.max_y = overClip.crop.min_y
+                overClip.blend_type = "OVER_DROP"
 
-        if self.inputAudioMediaPath is not None:
-            if specificFrame is None:
-                audioClip = None
-                if os.path.exists(self.inputAudioMediaPath):
-                    audioClip = self.createNewClip(vse_scene, self.inputAudioMediaPath, 3, 1)
-                else:
-                    print(f" *** Rendered shot not found: {self.inputAudioMediaPath}")
+        if self.inputAudioMediaPath is not None and specificFrame is None:
+            audioClip = None
+            if os.path.exists(self.inputAudioMediaPath):
+                audioClip = self.createNewClip(vse_scene, self.inputAudioMediaPath, 3, 1)
+            else:
+                print(f" *** Rendered shot not found: {self.inputAudioMediaPath}")
 
         # bpy.context.scene.sequence_editor.sequences
         # get res of video: bpy.context.scene.sequence_editor.sequences[1].elements[0].orig_width
@@ -1092,7 +1082,6 @@ def register():
 
 
 def unregister():
-    pass
     for cls in reversed(_classes):
         bpy.utils.unregister_class(cls)
 

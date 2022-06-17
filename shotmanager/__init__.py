@@ -202,7 +202,7 @@ def install_shot_handler(self, context):
 def checkDataVersion_post_load_handler(self, context):
     loadedFileName = bpy.path.basename(bpy.context.blend_data.filepath)
     print("\n\n-------------------------------------------------------")
-    if "" == loadedFileName:
+    if loadedFileName == "":
         print("\nNew file loaded")
     else:
         print("\nExisting file loaded: ", bpy.path.basename(bpy.context.blend_data.filepath))
@@ -241,19 +241,18 @@ def checkDataVersion_post_load_handler(self, context):
                         f"     *** Scene {scn.name}: Shot Manager Data Version is lower than the latest Shot Manager version to patch"
                     )
                     numScenesToUpgrade += 1
-                    if -1 == lowerSceneVersion or props.dataVersion < lowerSceneVersion:
+                    if (
+                        lowerSceneVersion == -1
+                        or props.dataVersion < lowerSceneVersion
+                    ):
                         lowerSceneVersion = props.dataVersion
-                else:
-                    if props.dataVersion < props.version()[1]:
-                        props.dataVersion = props.version()[1]
-                    # set right data version
-                    # props.dataVersion = bpy.context.window_manager.UAS_shot_manager_version
-                    # print("       Data upgraded to version V. ", props.dataVersion)
-
+                elif props.dataVersion < props.version()[1]:
+                    props.dataVersion = props.version()[1]
         if numScenesToUpgrade:
             print(
-                f"Shot Manager Data Version is lower than the current Shot Manager version - Upgrading data with patches..."
+                "Shot Manager Data Version is lower than the current Shot Manager version - Upgrading data with patches..."
             )
+
             # apply patch and apply new data version
             # wkip patch strategy to re-think. Collect the data versions and apply the respective patches?
 

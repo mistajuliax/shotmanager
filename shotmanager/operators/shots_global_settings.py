@@ -44,11 +44,17 @@ class UAS_ShotManager_ShotsGlobalSettings(PropertyGroup):
         shotList = take.getShotList(ignoreDisabled=False)
 
         for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None and len(shot.camera.data.background_images):
-                    # shot.camera.data.background_images[0].alpha = self.backgroundAlpha
-                    gamma = 2.2
-                    shot.camera.data.background_images[0].alpha = pow(self.backgroundAlpha, gamma)
+            if (
+                (
+                    shot.enabled
+                    or props.shotsGlobalSettings.alsoApplyToDisabledShots
+                )
+                and shot.camera is not None
+                and len(shot.camera.data.background_images)
+            ):
+                # shot.camera.data.background_images[0].alpha = self.backgroundAlpha
+                gamma = 2.2
+                shot.camera.data.background_images[0].alpha = pow(self.backgroundAlpha, gamma)
 
     backgroundAlpha: FloatProperty(
         name="Background Images Alpha",
@@ -67,9 +73,15 @@ class UAS_ShotManager_ShotsGlobalSettings(PropertyGroup):
         shotList = take.getShotList(ignoreDisabled=False)
 
         for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None and len(shot.camera.data.background_images):
-                    shot.camera.data.background_images[0].clip_user.proxy_render_size = self.proxyRenderSize
+            if (
+                (
+                    shot.enabled
+                    or props.shotsGlobalSettings.alsoApplyToDisabledShots
+                )
+                and shot.camera is not None
+                and len(shot.camera.data.background_images)
+            ):
+                shot.camera.data.background_images[0].clip_user.proxy_render_size = self.proxyRenderSize
 
     proxyRenderSize: EnumProperty(
         name="Proxy Render Size",
@@ -95,14 +107,6 @@ class UAS_ShotManager_ShotsGlobalSettings(PropertyGroup):
         take = props.getCurrentTake()
         shotList = take.getShotList(ignoreDisabled=False)
 
-        for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None and len(shot.camera.data.background_images):
-                    # shot.camera.data.background_images[0].alpha = self.backgroundAlpha
-                    #   gamma = 2.2
-                    #   shot.camera.data.background_images[0].alpha = pow(self.backgroundAlpha, gamma)
-                    pass
-
     backgroundVolume: FloatProperty(
         name="Background Volume",
         description="Change the volume of the camera backgrounds sound",
@@ -125,11 +129,17 @@ class UAS_ShotManager_ShotsGlobalSettings(PropertyGroup):
         shotList = take.getShotList(ignoreDisabled=False)
 
         for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None and len(shot.camera.data.background_images):
-                    # shot.camera.data.background_images[0].alpha = self.backgroundAlpha
-                    gamma = 2.2
-                    shot.camera.data.background_images[0].alpha = pow(self.backgroundAlpha, gamma)
+            if (
+                (
+                    shot.enabled
+                    or props.shotsGlobalSettings.alsoApplyToDisabledShots
+                )
+                and shot.camera is not None
+                and len(shot.camera.data.background_images)
+            ):
+                # shot.camera.data.background_images[0].alpha = self.backgroundAlpha
+                gamma = 2.2
+                shot.camera.data.background_images[0].alpha = pow(self.backgroundAlpha, gamma)
 
     greasepencilAlpha: FloatProperty(
         name="Grease Pencil Alpha",
@@ -164,9 +174,10 @@ class UAS_ShotsSettings_UseBackground(Operator):
         shotList = take.getShotList(ignoreDisabled=False)
 
         for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None:
-                    shot.camera.data.show_background_images = self.useBackground
+            if (
+                shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots
+            ) and shot.camera is not None:
+                shot.camera.data.show_background_images = self.useBackground
 
         return {"FINISHED"}
 
@@ -206,12 +217,13 @@ class UAS_ShotsSettings_UseGreasePencil(Operator):
         shotList = take.getShotList(ignoreDisabled=False)
 
         for shot in shotList:
-            if shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots:
-                if shot.camera is not None:
-                    gp_child = utils.get_greasepencil_child(shot.camera)
-                    if gp_child is not None:
-                        gp_child.hide_viewport = self.useGreasepencil
-                        gp_child.hide_render = self.useGreasepencil
+            if (
+                shot.enabled or props.shotsGlobalSettings.alsoApplyToDisabledShots
+            ) and shot.camera is not None:
+                gp_child = utils.get_greasepencil_child(shot.camera)
+                if gp_child is not None:
+                    gp_child.hide_viewport = self.useGreasepencil
+                    gp_child.hide_render = self.useGreasepencil
 
         return {"FINISHED"}
 

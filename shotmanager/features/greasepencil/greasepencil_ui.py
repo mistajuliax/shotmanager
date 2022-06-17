@@ -36,9 +36,7 @@ def draw_greasepencil_shot_properties(sm_ui, context, shot):
     gp_child = None
     if shot is not None:
         shotIndex = props.getShotIndex(shot)
-        if shot.camera is None:
-            pass
-        else:
+        if shot.camera is not None:
             gp_child = utils.get_greasepencil_child(shot.camera)
 
     panelIcon = "TRIA_DOWN" if prefs.shot_greasepencil_extended and gp_child is not None else "TRIA_RIGHT"

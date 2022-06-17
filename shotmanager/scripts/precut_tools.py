@@ -85,7 +85,7 @@ class UAS_ShotManager_PredecTools_CreateShotsFromSingleCamera(Operator):
         self.end = context.scene.frame_current + prefs.new_shot_duration
 
         camName = context.scene.UAS_shot_manager_props.getActiveCameraName()
-        if "" != camName:
+        if camName != "":
             self.cameraName = camName
 
         return wm.invoke_props_dialog(self)
@@ -127,9 +127,8 @@ class UAS_ShotManager_PredecTools_CreateShotsFromSingleCamera(Operator):
         currentShotInd = props.getCurrentShotIndex()
         selectedShotInd = props.getSelectedShotIndex()
 
-        i = 0
-        for shotNumber in range(self.start, self.end, self.duration):
-            shotName = props.new_shot_prefix + f"{(shotNumber):03d}"
+        for i, shotNumber in enumerate(range(self.start, self.end, self.duration)):
+            shotName = f"{props.new_shot_prefix}{shotNumber:03d}"
             props.addShot(
                 atIndex=selectedShotInd + i + 1,
                 camera=scene.objects[self.cameraName],
@@ -139,9 +138,7 @@ class UAS_ShotManager_PredecTools_CreateShotsFromSingleCamera(Operator):
                 color=(uniform(0, 1), uniform(0, 1), uniform(0, 1), 1),
             )
 
-            i += 1
-
-        if -1 == currentShotInd:
+        if currentShotInd == -1:
             props.setCurrentShotByIndex(0)
             props.setSelectedShotByIndex(0)
             # wkip pas parfait, on devrait conserver la sel currente
@@ -163,8 +160,7 @@ class UAS_ShotManager_OT_PredecTools_PrintMontageInfo(Operator):
         # sm_montage.initialize(scene, props.getCurrentTake())
 
         props.printInfo()
-        dictMontage = dict()
-        dictMontage["sequence"] = context.scene.name
+        dictMontage = {"sequence": context.scene.name}
         props.getInfoAsDictionnary(dictMontage=dictMontage)
 
         import json
@@ -190,8 +186,7 @@ class UAS_ShotManager_OT_PredecTools_MontageSequencesToJson(Operator):
         # sm_montage.initialize(scene, props.getCurrentTake())
 
         # props.printInfo()
-        dictMontage = dict()
-        dictMontage["montage"] = config.gMontageOtio.get_name()
+        dictMontage = {"montage": config.gMontageOtio.get_name()}
         dictMontage["montage_type"] = config.gMontageOtio.get_montage_type()
         dictMontage["montage_file"] = config.gMontageOtio.otioFile
 
@@ -203,7 +198,7 @@ class UAS_ShotManager_OT_PredecTools_MontageSequencesToJson(Operator):
         jsonFile = str(Path(config.gMontageOtio.otioFile).parent)
         if not jsonFile.endswith("\\"):
             jsonFile += "\\"
-        jsonFile += Path(config.gMontageOtio.otioFile).stem + ".json"
+        jsonFile += f"{Path(config.gMontageOtio.otioFile).stem}.json"
 
         # with open(jsonFile, "w") as fp:
         #     json.dump(dictMontage, fp, indent=3)

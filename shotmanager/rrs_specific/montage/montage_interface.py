@@ -36,8 +36,8 @@ class MontageInterface(object):
 
     def __init__(self):
         self._name = ""
-        self.sequencesList = list()
-        self._characteristics = dict()
+        self.sequencesList = []
+        self._characteristics = {}
 
     def get_montage_type(self):
         return "INTERFACE"
@@ -62,7 +62,7 @@ class MontageInterface(object):
 
     def getInfoAsDictionnary(self, dictMontage=None, shotsDetails=True):
         if dictMontage is None:
-            dictMontage = dict()
+            dictMontage = {}
             dictMontage["montage"] = self.get_name()
         dictMontage["sequences"] = []
         for seq in self.sequencesList:
@@ -84,7 +84,7 @@ class MontageInterface(object):
     def set_montage_characteristics(self, framerate=-1, resolution_x=-1, resolution_y=-1, duration=-1):
         """
         """
-        self._characteristics = dict()
+        self._characteristics = {}
         self._characteristics["framerate"] = framerate  # timebase
         self._characteristics["resolution_x"] = resolution_x  # width
         self._characteristics["resolution_y"] = resolution_y  # height
@@ -124,21 +124,16 @@ class MontageInterface(object):
 
     def newSequence(self):
         if self.sequencesList is None:
-            self.sequencesList = list()
+            self.sequencesList = []
         newSeq = SequenceInterface(self)
         self.sequencesList.append(newSeq)
         return newSeq
 
     def get_sequence_by_name(self, sequence_name):
-        refSeq = None
-
         sequences = self.get_sequences()
-        for seq in sequences:
-            #  print(f"seq: {seq}, sequence_name: {sequence_name}")
-            if seq.get_name() == sequence_name:
-                refSeq = seq
-                break
-        return refSeq
+        return next(
+            (seq for seq in sequences if seq.get_name() == sequence_name), None
+        )
 
     def conformToRefMontage(self, ref_montage, ref_sequence_name=""):
         infoStr += f"\n\n {utils.bcolors.WARNING}Conform to ref montge (in Montage_interface.py):{utils.bcolors.ENDC}\n"
@@ -256,7 +251,7 @@ class SequenceInterface(object):
         self.parent = parent
 
         self._name = ""
-        self.shotsList = list()
+        self.shotsList = []
         self.start = -1
         self.end = -1
 
@@ -268,7 +263,7 @@ class SequenceInterface(object):
 
     def newShot(self, shot):
         if self.shotsList is None:
-            self.shotsList = list()
+            self.shotsList = []
         newShot = ShotInterface()
         # newShot = ShotInterface(self)
         self.initialize(self)
@@ -291,9 +286,7 @@ class SequenceInterface(object):
                 shot.printInfo()
 
     def getInfoAsDictionnary(self, shotsDetails=True):
-        dictSeq = dict()
-        dictSeq["sequence_name"] = self.get_name()
-
+        dictSeq = {"sequence_name": self.get_name()}
         if shotsDetails:
             dictSeq["shots"] = []
             for shot in self.getEditShots():
@@ -340,8 +333,6 @@ class ShotInterface(object):
         # parent sequence
         self.parent = None
 
-        pass
-
     def initialize(self, parent):
         self.parent = parent
 
@@ -375,8 +366,7 @@ class ShotInterface(object):
         print(infoStr)
 
     def getInfoAsDictionnary(self, shotsDetails=True):
-        dictShot = dict()
-        dictShot["shot"] = self.get_name()
+        dictShot = {"shot": self.get_name()}
         if shotsDetails:
             dictShot["frame_final_start"] = self.get_frame_final_start()
             dictShot["frame_final_duration"] = self.get_frame_final_duration()

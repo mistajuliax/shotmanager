@@ -101,7 +101,7 @@ def launchRenderWithVSEComposite(
                 print("Cannot delete Dir: ", dirPath)
 
         if config.uasDebug:
-            print(f"Cleaning temp scenes")
+            print("Cleaning temp scenes")
 
         scenesToDelete = [
             s
@@ -794,10 +794,9 @@ def renderStampedInfoForShot(
     stampInfoSettings.notesLine03 = shot.note03
 
     stampInfoSettings.cornerNoteUsed = not shot.enabled
-    if not shot.enabled:
-        stampInfoSettings.cornerNote = " *** Shot Muted in the take ***"
-    else:
-        stampInfoSettings.cornerNote = ""
+    stampInfoSettings.cornerNote = (
+        "" if shot.enabled else " *** Shot Muted in the take ***"
+    )
 
     if not render_handles:
         handles = 0
@@ -874,13 +873,8 @@ def renderStampedInfoForShot(
         # stampInfoSettings.shotName = f"{shot.name}"
 
         if stampInfoCustomSettingsDict is not None:
-            if True or "asset_tracking_step" in stampInfoCustomSettingsDict:
-                stampInfoSettings.bottomNoteUsed = True
-                stampInfoSettings.bottomNote = "Step: " + stampInfoCustomSettingsDict["asset_tracking_step"]
-            else:
-                stampInfoSettings.bottomNoteUsed = False
-                stampInfoSettings.bottomNote = ""
-
+            stampInfoSettings.bottomNoteUsed = True
+            stampInfoSettings.bottomNote = "Step: " + stampInfoCustomSettingsDict["asset_tracking_step"]
         stampInfoSettings.cameraName = shot.camera.name
         stampInfoSettings.edit3DFrame = props.getEditTime(shot, currentFrame, referenceLevel="GLOBAL_EDIT")
         stampInfoSettings.renderRootPath = newTempRenderPath
@@ -892,7 +886,7 @@ def renderStampedInfoForShot(
             renderFilename=r"_tmp_StampInfo." + "{:05d}".format(currentFrame) + ".png",
             verbose=False,
         )
-        # stampInfoSettings.renderTmpImageWithStampedInfo(scene, currentFrame, verbose=True)
+            # stampInfoSettings.renderTmpImageWithStampedInfo(scene, currentFrame, verbose=True)
 
     ##############
     # restore scene state
@@ -914,29 +908,31 @@ def launchRender(context, renderMode, rootPath, area=None):
     context = bpy.context
     scene = bpy.context.scene
     props = scene.UAS_shot_manager_props
-    renderDisplayInfo = ""
+    renderDisplayInfo = (
+        ""
+        + "\n\n*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\n"
+    )
 
-    renderDisplayInfo += "\n\n*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\n"
     renderDisplayInfo += "\n                                 *** Shot Manager V " + props.version()[0] + " - "
 
     preset = None
-    if "STILL" == renderMode:
+    if renderMode == "STILL":
         preset = props.renderSettingsStill
         renderDisplayInfo += f"  Rendering with {preset.name}"
-    elif "ANIMATION" == renderMode:
+    elif renderMode == "ANIMATION":
         preset = props.renderSettingsAnim
         renderDisplayInfo += f"  Rendering with {preset.name}"
-    elif "ALL" == renderMode:
+    elif renderMode == "ALL":
         preset = props.renderSettingsAll
         renderDisplayInfo += f"  Rendering with {preset.name}"
-    elif "OTIO" == renderMode:
+    elif renderMode == "OTIO":
         preset = props.renderSettingsOtio
         renderDisplayInfo += f"  Rendering with {preset.name}"
-    elif "PLAYBLAST" == renderMode:
+    elif renderMode == "PLAYBLAST":
         preset = props.renderSettingsPlayblast
         renderDisplayInfo += f"  Rendering with {preset.name}"
     else:
-        _logger.error(f"No valid render preset found")
+        _logger.error("No valid render preset found")
 
     stampInfoSettings = None
     preset_useStampInfo = False
@@ -944,7 +940,7 @@ def launchRender(context, renderMode, rootPath, area=None):
 
     fileIsReadOnly = False
     currentFilePath = bpy.path.abspath(bpy.data.filepath)
-    if "" == currentFilePath:
+    if currentFilePath == "":
         fileIsReadOnly = True
     else:
         stat = Path(currentFilePath).stat()
@@ -979,19 +975,18 @@ def launchRender(context, renderMode, rootPath, area=None):
     renderDisplayInfo += f"\n"
     print(renderDisplayInfo)
 
-    if True:
-        # prepare render settings
-        # camera
-        # range
-        # takes
+    # prepare render settings
+    # camera
+    # range
+    # takes
 
-        take = props.getCurrentTake()
-        if take is None:
-            print("Shot Manager Rendering: No current take found - Rendering aborted")
-            return False
+    take = props.getCurrentTake()
+    if take is None:
+        print("Shot Manager Rendering: No current take found - Rendering aborted")
+        return False
 
-        context.window_manager.UAS_shot_manager_shots_play_mode = False
-        context.window_manager.UAS_shot_manager_display_timeline = False
+    context.window_manager.UAS_shot_manager_shots_play_mode = False
+    context.window_manager.UAS_shot_manager_display_timeline = False
 
         # if props.use_project_settings:
         #     props.applyProjectSettings()
@@ -1003,131 +998,121 @@ def launchRender(context, renderMode, rootPath, area=None):
         #             scene.render.resolution_y = resolution[1]
 
         # render window
-        if "STILL" == preset.renderMode:
-            _logger.debug("Render Animation")
-            shot = props.getCurrentShot()
+    if preset.renderMode == "STILL":
+        _logger.debug("Render Animation")
+        shot = props.getCurrentShot()
 
-            # get the list of files to write, delete them is they exists, stop everithing if the delete cannot be done
-            #            shotFileName = shot.
+        # get the list of files to write, delete them is they exists, stop everithing if the delete cannot be done
+        #            shotFileName = shot.
 
-            willBeRenderedFilesDict = launchRenderWithVSEComposite(
-                context,
-                preset,
-                filePath=props.renderRootPath,
-                generateSequenceVideo=False,
-                specificShotList=[shot],
-                specificFrame=scene.frame_current,
-                fileListOnly=True,
-            )
-            # willBeRenderedFilesDict
+        willBeRenderedFilesDict = launchRenderWithVSEComposite(
+            context,
+            preset,
+            filePath=props.renderRootPath,
+            generateSequenceVideo=False,
+            specificShotList=[shot],
+            specificFrame=scene.frame_current,
+            fileListOnly=True,
+        )
+        # willBeRenderedFilesDict
 
+        renderedFilesDict = launchRenderWithVSEComposite(
+            context,
+            preset,
+            filePath=props.renderRootPath,
+            useStampInfo=preset.useStampInfo,
+            generateSequenceVideo=False,
+            specificShotList=[shot],
+            specificFrame=scene.frame_current,
+            area=area,
+        )
+        print(json.dumps(renderedFilesDict, indent=4))
+
+    elif preset.renderMode == "ANIMATION":
+        _logger.debug("Render Animation")
+        if not fileIsReadOnly:
+            bpy.ops.wm.save_mainfile()
+        shot = props.getCurrentShot()
+
+        renderedFilesDict = launchRenderWithVSEComposite(
+            context,
+            preset,
+            filePath=props.renderRootPath,
+            useStampInfo=preset.useStampInfo,
+            generateSequenceVideo=False,
+            specificShotList=[shot],
+            render_handles=preset.renderHandles if preset.bypass_rendering_project_settings else True,
+            area=area,
+        )
+        print(json.dumps(renderedFilesDict, indent=4))
+
+    elif preset.renderMode == "ALL":
+        _logger.debug(f"Render All:{str(props.renderSettingsAll.renderAllTakes)}")
+        _logger.debug(f"Render All, preset.renderAllTakes: {preset.renderAllTakes}")
+        if not fileIsReadOnly:
+            bpy.ops.wm.save_mainfile()
+
+        takesToRender = [-1]
+        if preset.renderAllTakes:
+            print("Render All takes")
+            takesToRender = list(range(len(props.takes)))
+
+        for takeInd in takesToRender:
             renderedFilesDict = launchRenderWithVSEComposite(
                 context,
                 preset,
+                takeIndex=takeInd,
                 filePath=props.renderRootPath,
+                fileListOnly=False,
                 useStampInfo=preset.useStampInfo,
-                generateSequenceVideo=False,
-                specificShotList=[shot],
-                specificFrame=scene.frame_current,
+                rerenderExistingShotVideos=preset.rerenderExistingShotVideos,
+                generateSequenceVideo=preset.generateEditVideo,
+                renderAlsoDisabled=preset.renderAlsoDisabled,
                 area=area,
             )
-            print(json.dumps(renderedFilesDict, indent=4))
 
-        elif "ANIMATION" == preset.renderMode:
-            _logger.debug("Render Animation")
-            if not fileIsReadOnly:
-                bpy.ops.wm.save_mainfile()
-            shot = props.getCurrentShot()
-
-            renderedFilesDict = launchRenderWithVSEComposite(
-                context,
-                preset,
-                filePath=props.renderRootPath,
-                useStampInfo=preset.useStampInfo,
-                generateSequenceVideo=False,
-                specificShotList=[shot],
-                render_handles=preset.renderHandles if preset.bypass_rendering_project_settings else True,
-                area=area,
-            )
-            print(json.dumps(renderedFilesDict, indent=4))
-
-        elif "ALL" == preset.renderMode:
-            _logger.debug(f"Render All:" + str(props.renderSettingsAll.renderAllTakes))
-            _logger.debug(f"Render All, preset.renderAllTakes: {preset.renderAllTakes}")
-            if not fileIsReadOnly:
-                bpy.ops.wm.save_mainfile()
-
-            takesToRender = [-1]
-            if preset.renderAllTakes:
-                print("Render All takes")
-                takesToRender = [i for i in range(0, len(props.takes))]
-
-            for takeInd in takesToRender:
-                renderedFilesDict = launchRenderWithVSEComposite(
-                    context,
-                    preset,
+            if preset.renderOtioFile:
+                bpy.context.window.scene = scene
+                renderedOtioFile = exportShotManagerEditToOtio(
+                    scene,
                     takeIndex=takeInd,
                     filePath=props.renderRootPath,
                     fileListOnly=False,
-                    useStampInfo=preset.useStampInfo,
-                    rerenderExistingShotVideos=preset.rerenderExistingShotVideos,
-                    generateSequenceVideo=preset.generateEditVideo,
-                    renderAlsoDisabled=preset.renderAlsoDisabled,
-                    area=area,
+                    #  montageCharacteristics=props.get_montage_characteristics(),
                 )
+                # renderedFilesDict["edl_files"] = [renderedOtioFile]
+        print(json.dumps(renderedFilesDict, indent=4))
 
-                if preset.renderOtioFile:
-                    bpy.context.window.scene = scene
-                    renderedOtioFile = exportShotManagerEditToOtio(
-                        scene,
-                        takeIndex=takeInd,
-                        filePath=props.renderRootPath,
-                        fileListOnly=False,
-                        #  montageCharacteristics=props.get_montage_characteristics(),
-                    )
-                    # renderedFilesDict["edl_files"] = [renderedOtioFile]
-            print(json.dumps(renderedFilesDict, indent=4))
+    elif preset.renderMode == "PLAYBLAST":
+        _logger.debug("Render Playblast")
+        if not fileIsReadOnly:
+            bpy.ops.wm.save_mainfile()
 
-        elif "PLAYBLAST" == preset.renderMode:
-            _logger.debug(f"Render Playblast")
-            if not fileIsReadOnly:
-                bpy.ops.wm.save_mainfile()
+        if context.space_data.overlay.show_overlays and preset.disableCameraBG:
+            bpy.ops.uas_shots_settings.use_background(useBackground=False)
 
-            if context.space_data.overlay.show_overlays and preset.disableCameraBG:
-                bpy.ops.uas_shots_settings.use_background(useBackground=False)
-
-            renderedFilesDict = launchRenderWithVSEComposite(
-                context,
-                preset,
-                takeIndex=-1,
-                filePath=props.renderRootPath,
-                fileListOnly=False,
-                useStampInfo=preset.stampRenderInfo and preset.useStampInfo,
-                rerenderExistingShotVideos=True,
-                generateShotVideos=False,
-                generateSequenceVideo=True,
-                renderAlsoDisabled=False,
-                render_handles=False,
-                renderSound=preset.renderSound,
-                area=area,
-            )
+        renderedFilesDict = launchRenderWithVSEComposite(
+            context,
+            preset,
+            takeIndex=-1,
+            filePath=props.renderRootPath,
+            fileListOnly=False,
+            useStampInfo=preset.stampRenderInfo and preset.useStampInfo,
+            rerenderExistingShotVideos=True,
+            generateShotVideos=False,
+            generateSequenceVideo=True,
+            renderAlsoDisabled=False,
+            render_handles=False,
+            renderSound=preset.renderSound,
+            area=area,
+        )
 
             # open rendered media in a player
-            if preset.openPlayblastInPlayer:
-                if len(renderedFilesDict["sequence_video_file"]):
-                    utils.openMedia(renderedFilesDict["sequence_video_file"], inExternalPlayer=True)
+        if preset.openPlayblastInPlayer and len(
+            renderedFilesDict["sequence_video_file"]
+        ):
+            utils.openMedia(renderedFilesDict["sequence_video_file"], inExternalPlayer=True)
 
-            # open rendered media in vse
-            # wkip removed until uas_videotracks works
-            if False and preset.updatePlayblastInVSM:
-                from shotmanager.scripts.rrs.rrs_playblast import rrs_playblast_to_vsm
-
-                rrs_playblast_to_vsm(playblastInfo=renderedFilesDict["playblastInfos"])
-
-                pass
-
-        else:
-            print("\n *** preset.renderMode is invalid, cannot render anything... ***\n")
-            pass
-
-        print("Render done\n")
+    else:
+        print("\n *** preset.renderMode is invalid, cannot render anything... ***\n")
+    print("Render done\n")

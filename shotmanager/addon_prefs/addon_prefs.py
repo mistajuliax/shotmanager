@@ -167,8 +167,7 @@ class UAS_ShotManager_AddonPrefs(AddonPreferences):
     ##################
 
     def _get_addShot_start(self):
-        val = self.get("addShot_start", 25)
-        return val
+        return self.get("addShot_start", 25)
 
     # *** behavior here must match the one of start and end of shot properties ***
     def _set_addShot_start(self, value):
@@ -186,8 +185,7 @@ class UAS_ShotManager_AddonPrefs(AddonPreferences):
     )
 
     def _get_addShot_end(self):
-        val = self.get("addShot_end", 30)
-        return val
+        return self.get("addShot_end", 30)
 
     # *** behavior here must match the one of start and end of shot properties ***
     def _set_addShot_end(self, value):

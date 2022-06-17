@@ -138,7 +138,7 @@ class UAS_ShotManager_RemoveBGImages(Operator):
         shotList = []
 
         print("Remove BG images: shotIndex: ", self.shotIndex)
-        if 0 > self.shotIndex:
+        if self.shotIndex < 0:
             take = context.scene.UAS_shot_manager_props.getCurrentTake()
             shotList = take.getShotList(ignoreDisabled=props.shotsGlobalSettings.alsoApplyToDisabledShots)
         else:
@@ -170,7 +170,7 @@ class UAS_ShotManager_EnableDisableCamsBG(Operator):
     def invoke(self, context, event):
         prefs = context.preferences.addons["shotmanager"].preferences
 
-        if "All" == self.mode or "Image" == self.mode:
+        if self.mode in ["All", "Image"]:
             bpy.ops.uas_shots_settings.use_background(useBackground=prefs.toggleCamsBG)
             prefs.toggleCamsBG = not prefs.toggleCamsBG
         # if "All" == self.mode or "Sound" == self.mode:

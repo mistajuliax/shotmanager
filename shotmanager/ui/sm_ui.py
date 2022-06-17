@@ -70,7 +70,7 @@ class UAS_PT_ShotManager(Panel):
         row.operator("uas_shot_manager.about", text="", icon_value=icon.icon_id)
 
         if props.use_project_settings:
-            if "" == props.project_name:
+            if props.project_name == "":
                 row.alert = True
                 row.label(text="<No Project Name>")
                 row.alert = False

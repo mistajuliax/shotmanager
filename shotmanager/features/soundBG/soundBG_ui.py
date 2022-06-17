@@ -70,11 +70,14 @@ def draw_soundBG_shot_properties(sm_ui, context, shot):
                 row.prop(shot, "bgImages_linkToShotStart")
                 row.prop(shot, "bgImages_offset")
 
-            if config.uasDebug:
-                if shot.camera is not None and len(shot.camera.data.background_images):
-                    bgClip = shot.camera.data.background_images[0].clip
-                    row = box.row()
-                    row.separator(factor=1.0)
-                    row.label(
-                        text=f"BG Clip:  {bgClip.name},  start:  {bgClip.frame_start} fr.,  Sound track ind.: {shot.bgImages_sound_trackIndex}"
-                    )
+            if (
+                config.uasDebug
+                and shot.camera is not None
+                and len(shot.camera.data.background_images)
+            ):
+                bgClip = shot.camera.data.background_images[0].clip
+                row = box.row()
+                row.separator(factor=1.0)
+                row.label(
+                    text=f"BG Clip:  {bgClip.name},  start:  {bgClip.frame_start} fr.,  Sound track ind.: {shot.bgImages_sound_trackIndex}"
+                )

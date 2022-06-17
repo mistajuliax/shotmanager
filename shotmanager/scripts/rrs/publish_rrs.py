@@ -61,22 +61,32 @@ def setup_project_env(override_existing: bool, verbose: bool = True) -> None:
 
 
 def print_project_env():
-    settingsList = []
+    settingsList = [
+        ["UAS_PROJECT_NAME", os.environ["UAS_PROJECT_NAME"]],
+        ["UAS_PROJECT_FRAMERATE", os.environ["UAS_PROJECT_FRAMERATE"]],
+        ["UAS_PROJECT_RESOLUTION", os.environ["UAS_PROJECT_RESOLUTION"]],
+        [
+            "UAS_PROJECT_RESOLUTIONFRAMED",
+            os.environ["UAS_PROJECT_RESOLUTIONFRAMED"],
+        ],
+        ["UAS_PROJECT_SHOTFORMAT", os.environ["UAS_PROJECT_SHOTFORMAT"]],
+        [
+            "UAS_PROJECT_USESHOTHANDLES",
+            os.environ["UAS_PROJECT_USESHOTHANDLES"],
+        ],
+        [
+            "UAS_PROJECT_SHOTHANDLEDURATION",
+            os.environ["UAS_PROJECT_SHOTHANDLEDURATION"],
+        ],
+        ["UAS_PROJECT_OUTPUTFORMAT", os.environ["UAS_PROJECT_OUTPUTFORMAT"]],
+        ["UAS_PROJECT_COLORSPACE", os.environ["UAS_PROJECT_COLORSPACE"]],
+        ["UAS_PROJECT_ASSETNAME", os.environ["UAS_PROJECT_ASSETNAME"]],
+    ]
 
-    settingsList.append(["UAS_PROJECT_NAME", os.environ["UAS_PROJECT_NAME"]])
-    settingsList.append(["UAS_PROJECT_FRAMERATE", os.environ["UAS_PROJECT_FRAMERATE"]])
-    settingsList.append(["UAS_PROJECT_RESOLUTION", os.environ["UAS_PROJECT_RESOLUTION"]])
-    settingsList.append(["UAS_PROJECT_RESOLUTIONFRAMED", os.environ["UAS_PROJECT_RESOLUTIONFRAMED"]])
-    settingsList.append(["UAS_PROJECT_SHOTFORMAT", os.environ["UAS_PROJECT_SHOTFORMAT"]])
-    settingsList.append(["UAS_PROJECT_USESHOTHANDLES", os.environ["UAS_PROJECT_USESHOTHANDLES"]])
-    settingsList.append(["UAS_PROJECT_SHOTHANDLEDURATION", os.environ["UAS_PROJECT_SHOTHANDLEDURATION"]])
-    settingsList.append(["UAS_PROJECT_OUTPUTFORMAT", os.environ["UAS_PROJECT_OUTPUTFORMAT"]])
-    settingsList.append(["UAS_PROJECT_COLORSPACE", os.environ["UAS_PROJECT_COLORSPACE"]])
-    settingsList.append(["UAS_PROJECT_ASSETNAME", os.environ["UAS_PROJECT_ASSETNAME"]])
 
     print("\n\nProject Environment Variables:\n")
     for prop in settingsList:
-        print(prop[0] + ": " + prop[1])
+        print(f"{prop[0]}: {prop[1]}")
 
 
 def initializeForRRS(override_existing: bool, verbose=False):

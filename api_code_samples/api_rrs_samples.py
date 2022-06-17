@@ -13,7 +13,7 @@ from shotmanager.api import rrs
 current_file = bpy.data.filepath
 current_dir = os.path.dirname(current_file)
 
-if "" == current_file:
+if current_file == "":
     print("*** Save the scene first ***")
 
 

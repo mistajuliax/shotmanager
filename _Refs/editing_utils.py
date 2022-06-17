@@ -32,7 +32,7 @@ def append_to_timeline(main_track,input_timeline):
             new_clip.media_reference.target_url  = new_clip.media_reference.target_url.replace('\\','/')
             main_track.append(new_clip)
 
-def merge_sequences(act_name:str, use_gattaca_order:bool=True)->bool:
+def merge_sequences(act_name:str, use_gattaca_order:bool=True) -> bool:
     importlib.reload(naming)
     emon_api    = get_blender_emon_api()
     act         = emon_api.Act.get(act_name)
@@ -82,18 +82,18 @@ def merge_sequences(act_name:str, use_gattaca_order:bool=True)->bool:
     p4_utils.check_out(out_xml)
     timeline = otio.schema.Timeline()
     timeline.name = act_name
-	
+
 
     videoTrack = otio.schema.Track()
     videoTrack.name = "Video track"
-	videoTrack.kind = "Video"
-	timeline.tracks.append(videoTrack)
-	
+    videoTrack.kind = "Video"
+    timeline.tracks.append(videoTrack)
+
     audioTrack = otio.schema.Track()
     audioTrack.kind = "Audio"
     audioTrack.tracks.append(audioTrack)
-	timeline.tracks.append(audioTrack)
-    
+    timeline.tracks.append(audioTrack)
+
 
     ordered_sequences   = []
     if use_gattaca_order:
@@ -111,9 +111,7 @@ def merge_sequences(act_name:str, use_gattaca_order:bool=True)->bool:
                 continue
 
             tmp_dict[order] = seq
-        for o in sorted(tmp_dict.keys()):
-            ordered_sequences.append(tmp_dict[o])
-
+        ordered_sequences.extend(tmp_dict[o] for o in sorted(tmp_dict.keys()))
     else:
         ordered_sequences   = sequences
 

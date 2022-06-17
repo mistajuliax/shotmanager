@@ -32,74 +32,74 @@ def displayHandlers(handlerCategName=""):
     handlerCat = handlerCategName
 
     def _displayHandlersOfCateg(hCategName):
-        print("  " + hCategName + ":")
+        print(f"  {hCategName}:")
 
         if hCategName == "depsgraph_update_post":
             for h in bpy.app.handlers.depsgraph_update_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "depsgraph_update_pre":
             for h in bpy.app.handlers.depsgraph_update_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "frame_change_post":
             for h in bpy.app.handlers.frame_change_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "frame_change_pre":
             for h in bpy.app.handlers.frame_change_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "load_factory_preferences_post":
             for h in bpy.app.handlers.load_factory_preferences_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "load_factory_startup_post":
             for h in bpy.app.handlers.load_factory_startup_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "load_post":
             for h in bpy.app.handlers.load_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "load_pre":
             for h in bpy.app.handlers.load_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "redo_post":
             for h in bpy.app.handlers.redo_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "redo_pre":
             for h in bpy.app.handlers.redo_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_cancel":
             for h in bpy.app.handlers.render_cancel:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_complete":
             for h in bpy.app.handlers.render_complete:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_init":
             for h in bpy.app.handlers.render_init:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_post":
             for h in bpy.app.handlers.render_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_pre":
             for h in bpy.app.handlers.render_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_stats":
             for h in bpy.app.handlers.render_stats:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "render_write":
             for h in bpy.app.handlers.render_write:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "save_post":
             for h in bpy.app.handlers.save_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "save_pre":
             for h in bpy.app.handlers.save_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "undo_post":
             for h in bpy.app.handlers.undo_post:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "undo_pre":
             for h in bpy.app.handlers.undo_pre:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
         elif hCategName == "version_update":
             for h in bpy.app.handlers.version_update:
-                print("     " + h.__name__)
+                print(f"     {h.__name__}")
 
     print("\nCurrent registered handlers:")
     print("-----------------------------")
@@ -139,10 +139,7 @@ def displayHandlers(handlerCategName=""):
 def removeAllHandlerOccurences(handlerFunction, handlerCateg=None):
     handlerCat = handlerCateg
 
-    if handlerCat is None:
-        pass
-        # wkip to do: passer dans toutes les categs
-    else:
+    if handlerCat is not None:
         i = 0
         while i < len(handlerCat):
             if handlerFunction.__name__ == handlerCat[i].__name__:
@@ -160,10 +157,7 @@ def getHandlerByFunction(handlerFunction, handlerCateg=None):
     myHandlerFunc = None
 
     # search in all handler categories
-    if handlerCat is None:
-        pass
-        # wkip to do: passer dans toutes les categs
-    else:
+    if handlerCat is not None:
         i = 0
         # while i < len(bpy.app.handlers.render_init) and myHandlerFunc is None:
         while i < len(handlerCateg) and myHandlerFunc is None:

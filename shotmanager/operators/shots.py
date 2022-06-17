@@ -30,11 +30,12 @@ from shotmanager.utils import utils
 
 
 def list_cameras(self, context):
-    res = list()
-    for i, cam in enumerate([c for c in context.scene.objects if c.type == "CAMERA"]):
-        res.append((cam.name, cam.name, "", i))
-
-    return res
+    return [
+        (cam.name, cam.name, "", i)
+        for i, cam in enumerate(
+            c for c in context.scene.objects if c.type == "CAMERA"
+        )
+    ]
 
 
 ########################
@@ -118,18 +119,18 @@ class UAS_ShotManager_GetSetCurrentFrame(Operator):
 
         shot = props.getShotByIndex(argArr[0])
         if event.shift:
-            if 0 == argArr[1]:
+            if argArr[1] == 0:
                 shot.start = context.scene.frame_current
-            elif 1 == argArr[1]:
+            elif argArr[1] == 1:
                 shot.end = context.scene.frame_current
         else:
             if context.window_manager.UAS_shot_manager_shots_play_mode:
                 props.setCurrentShotByIndex(argArr[0])
             else:
                 props.setSelectedShotByIndex(argArr[0])
-            if 0 == argArr[1]:
+            if argArr[1] == 0:
                 context.scene.frame_current = shot.start
-            elif 1 == argArr[1]:
+            elif argArr[1] == 1:
                 context.scene.frame_current = shot.end
 
         return {"FINISHED"}
@@ -166,9 +167,9 @@ class UAS_ShotManager_ShotTimeInEdit(Operator):
             props.setSelectedShotByIndex(argArr[0])
 
         if event.type == "LEFTMOUSE":
-            if 0 == argArr[1]:
+            if argArr[1] == 0:
                 context.scene.frame_current = shot.start
-            elif 1 == argArr[1]:
+            elif argArr[1] == 1:
                 context.scene.frame_current = shot.end
 
         return {"FINISHED"}
@@ -211,18 +212,18 @@ class UAS_ShotManager_ListCameraInstances(Operator):
         shot = props.getShotByIndex(self.index)
         if shot.camera is not None:
             numSharedCam = props.getNumSharedCamera(shot.camera) - 1
-            if 0 < numSharedCam:
+            if numSharedCam > 0:
                 row.label(text=f"Camera shared with {numSharedCam} other shot(s)")
                 row = layout.row()
-                row.label(text=f"from this take or other ones")
+                row.label(text="from this take or other ones")
                 row = layout.row()
                 row.operator("uas_shot_manager.make_shot_camera_unique").shotName = props.getShotByIndex(
                     self.index
                 ).name
             else:
-                row.label(text=f"Camera used only in this shot, only in this take")
+                row.label(text="Camera used only in this shot, only in this take")
         else:
-            row.label(text=f"No camera defined")
+            row.label(text="No camera defined")
 
     def execute(self, context):
         return {"FINISHED"}
@@ -253,12 +254,20 @@ class UAS_ShotManager_MakeShotCameraUnique(Operator):
 
 
 def list_cameras_for_new_shot(self, context):
-    res = list()
-    res.append(("NEW_CAMERA", "New Camera", "Create new camera", 0))
-    for i, cam in enumerate([c for c in context.scene.objects if c.type == "CAMERA"]):
-        res.append(
-            (cam.name, cam.name, 'Use the exising scene camera named "' + cam.name + '"\nfor the new shot', i + 1)
+    res = [("NEW_CAMERA", "New Camera", "Create new camera", 0)]
+    res.extend(
+        (
+            cam.name,
+            cam.name,
+            'Use the exising scene camera named "'
+            + cam.name
+            + '"\nfor the new shot',
+            i + 1,
         )
+        for i, cam in enumerate(
+            c for c in context.scene.objects if c.type == "CAMERA"
+        )
+    )
 
     return res
 
@@ -278,9 +287,9 @@ class UAS_ShotManager_ShotAdd_GetCurrentFrameFor(Operator):
 
         currentFrame = scene.frame_current
 
-        if "addShot_start" == self.propertyToUpdate:
+        if self.propertyToUpdate == "addShot_start":
             prefs.addShot_start = min(prefs.addShot_end, currentFrame)
-        elif "addShot_end" == self.propertyToUpdate:
+        elif self.propertyToUpdate == "addShot_end":
             prefs.addShot_end = max(prefs.addShot_start, currentFrame)
         else:
             prefs[self.propertyToUpdate] = currentFrame
@@ -345,7 +354,7 @@ class UAS_ShotManager_ShotAdd(Operator):
         prefs.addShot_end = prefs.addShot_start + prefs.new_shot_duration
 
         camName = props.getActiveCameraName()
-        if "" != camName:
+        if camName != "":
             self.cameraName = camName
 
         self.color = (uniform(0, 1), uniform(0, 1), uniform(0, 1))
@@ -411,14 +420,21 @@ class UAS_ShotManager_ShotAdd(Operator):
         row = box.row(align=True)
         grid_flow = row.grid_flow(align=True, row_major=True, columns=2, even_columns=False)
 
-        grid_flow.enabled = not context.scene.UAS_shot_manager_props.use_camera_color or "NEW_CAMERA" == self.cameraName
+        grid_flow.enabled = (
+            not context.scene.UAS_shot_manager_props.use_camera_color
+            or self.cameraName == "NEW_CAMERA"
+        )
+
         col = grid_flow.column(align=False)
         col.label(text="Color:")
         col = grid_flow.column(align=True)
-        if "NEW_CAMERA" == self.cameraName:
+        if self.cameraName == "NEW_CAMERA":
             col.prop(self, "color", text="")
         else:
-            self.colorFromExistingCam = bpy.context.scene.objects[self.cameraName].color[0:3]
+            self.colorFromExistingCam = bpy.context.scene.objects[
+                self.cameraName
+            ].color[:3]
+
             col.prop(self, "colorFromExistingCam", text="")
 
         layout.separator()
@@ -433,11 +449,11 @@ class UAS_ShotManager_ShotAdd(Operator):
         cam = None
         col = [self.color[0], self.color[1], self.color[2], 1]
 
-        if "NEW_CAMERA" == self.cameraName:
-            cam = utils.create_new_camera("Cam_" + self.name)
+        if self.cameraName == "NEW_CAMERA":
+            cam = utils.create_new_camera(f"Cam_{self.name}")
         else:
             cam = bpy.context.scene.objects[self.cameraName]
-            if cam is None or "" == self.cameraName:
+            if cam is None or self.cameraName == "":
                 utils.ShowMessageBox("Camera with specified name not found in scene", "New Shot Creation Canceled")
                 return ()
 
@@ -459,14 +475,14 @@ class UAS_ShotManager_ShotAdd(Operator):
         )
 
         # make new camera name match possible changes in shot name
-        if "NEW_CAMERA" == self.cameraName and newShot.name != self.name:
-            cam.name = "Cam_" + newShot.name
+        if self.cameraName == "NEW_CAMERA" and newShot.name != self.name:
+            cam.name = f"Cam_{newShot.name}"
             cam.data.name = cam.name
 
         utils.clear_selection()
         utils.add_to_selection(cam)
 
-        if 0 < props.getNumShots() and props.display_shotname_in_3dviewport:
+        if props.getNumShots() > 0 and props.display_shotname_in_3dviewport:
             bpy.ops.uas_shot_manager.draw_cameras_ui("INVOKE_DEFAULT")
             bpy.ops.uas_shot_manager.draw_hud("INVOKE_DEFAULT")
 
@@ -499,9 +515,9 @@ class UAS_ShotManager_ShotDuplicate(Operator):
         selectedShot = context.scene.UAS_shot_manager_props.getSelectedShot()
         if selectedShot is None:
             return {"CANCELLED"}
-        self.name = selectedShot.name + "_duplicate"
+        self.name = f"{selectedShot.name}_duplicate"
         if selectedShot.camera is not None:
-            self.camName = selectedShot.camera.name + "_duplicate"
+            self.camName = f"{selectedShot.camera.name}_duplicate"
         return context.window_manager.invoke_props_dialog(self, width=350)
 
     def draw(self, context):
@@ -601,11 +617,11 @@ class UAS_ShotManager_ShotMove(Operator):
     action: bpy.props.EnumProperty(items=(("UP", "Up", ""), ("DOWN", "Down", "")))
 
     @classmethod
-    def description(self, context, properties):
+    def description(cls, context, properties):
         descr = "_"
-        if "UP" == properties.action:
+        if properties.action == "UP":
             descr = "Move shot up in the take list"
-        elif "DOWN" == properties.action:
+        elif properties.action == "DOWN":
             descr = "Move shot down in the take list"
         return descr
 
@@ -725,7 +741,7 @@ class UAS_ShotManager_CreateNShots(Operator):
         self.duration = prefs.new_shot_duration
 
         camName = props.getActiveCameraName()
-        if "" != camName:
+        if camName != "":
             self.cameraName = camName
 
         self.color = (uniform(0, 1), uniform(0, 1), uniform(0, 1))
@@ -786,7 +802,7 @@ class UAS_ShotManager_CreateNShots(Operator):
         cam = None
         col = [self.color[0], self.color[1], self.color[2], 1]
 
-        if "" != self.cameraName:
+        if self.cameraName != "":
             cam = bpy.context.scene.objects[self.cameraName]
             if props.use_camera_color:
                 col[0] = cam.color[0]
@@ -819,12 +835,11 @@ def list_target_takes(self, context):
     props = context.scene.UAS_shot_manager_props
     takes = props.getTakes()
     currentTake = props.getCurrentTake()
-    res = list()
-    for i, t in enumerate(takes):
-        if t != currentTake:
-            # res.append((t.getName_PathCompliant(), t.name, "", i))
-            res.append((t.name, t.name, "", i))
-    return res
+    return [
+        (t.name, t.name, "", i)
+        for i, t in enumerate(takes)
+        if t != currentTake
+    ]
 
 
 def list_target_take_shots(self, context):
@@ -832,12 +847,10 @@ def list_target_take_shots(self, context):
     """
     props = context.scene.UAS_shot_manager_props
     take = props.getTakeByName(self.targetTake)
-    res = list()
+    res = []
     if take is not None:
         res.append(("-1", "Edit Start", "Insert duplicated shots right after the start of the take", 0))
-        for i, s in enumerate(take.shots):
-            res.append((str(i), s.name, "", i + 1))
-
+        res.extend((str(i), s.name, "", i + 1) for i, s in enumerate(take.shots))
     # res = list()
     # res.append(("NEW_CAMERA", "New Camera", "Create new camera", 0))
     return res
@@ -913,7 +926,7 @@ class UAS_ShotManager_DuplicateShotsToOtherTake(Operator):
         col = grid_flow.column(align=True)
         col.prop(self, "insertAfterShot", text="")
 
-        if "DUPLICATE" == self.mode:
+        if self.mode == "DUPLICATE":
             row = box.row(align=True)
             row.separator(factor=2.5)
             subgrid_flow = row.grid_flow(align=True, row_major=True, columns=1, even_columns=False)
@@ -930,7 +943,7 @@ class UAS_ShotManager_DuplicateShotsToOtherTake(Operator):
 
         insertAfterShotInd = int(self.insertAfterShot) + 1
         insertAtInd = insertAfterShotInd
-        copyCam = "DUPLICATE" == self.mode and self.duplicateCam
+        copyCam = self.mode == "DUPLICATE" and self.duplicateCam
         for shot in enabledShots:
             # print(f"insertAtInd: {insertAtInd}")
             newShot = props.copyShot(
@@ -939,7 +952,7 @@ class UAS_ShotManager_DuplicateShotsToOtherTake(Operator):
             insertAtInd += 1
 
         # delete source shots
-        if "DUPLICATE" == self.mode:
+        if self.mode == "DUPLICATE":
             props.setCurrentTakeByIndex(targetTakeInd)
             props.setCurrentShotByIndex(insertAfterShotInd)
             props.setSelectedShotByIndex(insertAfterShotInd)
@@ -966,13 +979,13 @@ class UAS_ShotManager_ShotRemoveMultiple(Operator):
     )
 
     @classmethod
-    def description(self, context, properties):
+    def description(cls, context, properties):
         descr = "_"
         # print("properties: ", properties)
         # print("properties action: ", properties.action)
-        if "ALL" == properties.action:
+        if properties.action == "ALL":
             descr = "Remove all shots from the current take"
-        elif "DISABLED" == properties.action:
+        elif properties.action == "DISABLED":
             descr = "Remove only disabled shots from the current take"
         return descr
 
@@ -1034,13 +1047,11 @@ class UAS_ShotManager_ShotRemoveMultiple(Operator):
                 i = len(shots) - 1
                 while i > -1:
                     if not shots[i].enabled:
-                        if currentShotInd == len(shots) - 1 and currentShotInd == selectedShotInd:
-                            pass
                         if self.deleteCameras:
                             props.deleteShotCamera(shots[i])
                         shots.remove(i)
                     i -= 1
-                if 0 < len(shots):  # wkip pas parfait, on devrait conserver la sel currente
+                if len(shots) > 0:  # wkip pas parfait, on devrait conserver la sel currente
                     props.setCurrentShotByIndex(0)
                     props.setSelectedShotByIndex(0)
 
@@ -1143,7 +1154,7 @@ class UAS_ShotManager_UniqueCameras(Operator):
     def execute(self, context):
         scene = context.scene
         takes = get_takes(context.scene)
-        new_cam_from_shots = dict()
+        new_cam_from_shots = {}
         objects = bpy.data.objects
         for take in takes:
             existing_cam = set()

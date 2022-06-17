@@ -43,8 +43,7 @@ class UAS_PT_ShotManagerRetimer(Panel):
     @classmethod
     def poll(cls, context):
         props = context.scene.UAS_shot_manager_props
-        val = props.display_retimer_in_properties and not props.dontRefreshUI()
-        return val
+        return props.display_retimer_in_properties and not props.dontRefreshUI()
 
     def draw(self, context):
 
@@ -83,9 +82,9 @@ class UAS_PT_ShotManagerRetimer(Panel):
             newStartStr = f"Start: {retimerProps.start_frame} \u2192 {newStart}"
             newEnd = retimerProps.start_frame + 1 + retimerProps.insert_duration
             newEndStr = f"End: {retimerProps.start_frame + 1} \u2192 {newEnd}"
-            newRangeStr = f"Duration: {0} fr \u2192 {retimerProps.insert_duration} fr"
+            newRangeStr = f"Duration: 0 fr \u2192 {retimerProps.insert_duration} fr"
             row.separator(factor=1)
-            row.label(text=newStartStr + ",      " + newEndStr + ",      " + newRangeStr)
+            row.label(text=f"{newStartStr},      {newEndStr},      {newRangeStr}")
             row.separator(factor=1)
 
             # apply ###
@@ -121,7 +120,7 @@ class UAS_PT_ShotManagerRetimer(Panel):
             newEndStr = f"End: {retimerProps.end_frame} \u2192 {newEnd}"
             newRangeStr = f"Duration: {retimerProps.end_frame - retimerProps.start_frame - 1} fr. \u2192 {newEnd - retimerProps.start_frame - 1} fr.,"
             row.separator(factor=1)
-            row.label(text=newStartStr + ",      " + newEndStr + ",      " + newRangeStr)
+            row.label(text=f"{newStartStr},      {newEndStr},      {newRangeStr}")
             row.separator(factor=1)
 
             # apply ###
@@ -167,7 +166,7 @@ class UAS_PT_ShotManagerRetimer(Panel):
             newEndStr = f"End: {retimerProps.end_frame} \u2192 {newEnd}"
             newRangeStr = f"Duration: {retimerProps.end_frame - retimerProps.start_frame} fr. \u2192 {newEnd - retimerProps.start_frame} fr.,"
             row.separator(factor=1)
-            row.label(text=newStartStr + ",      " + newEndStr + ",      " + newRangeStr)
+            row.label(text=f"{newStartStr},      {newEndStr},      {newRangeStr}")
             row.separator(factor=1)
             # row.prop(retimerProps, "pivot")
 
@@ -179,30 +178,6 @@ class UAS_PT_ShotManagerRetimer(Panel):
             compo.scale_y = 1.2
             compo.operator("uas_shot_manager.retimerapply", text="Rescale")
             compo.separator(factor=2)
-
-        # elif retimerProps.mode == "RESCALE":
-        #     row = box.row()
-        #     row.separator(factor=1)
-        #     row.prop(retimerProps, "start_frame", text="From")
-        #     row.prop(retimerProps, "end_frame", text="To")
-
-        #     row.operator("uas_shot_manager.gettimerange", text="", icon="SEQ_STRIP_META")
-        #     row.separator(factor=1)
-
-        #     row = box.row()
-        #     row.use_property_split = True
-
-        #     row.prop(retimerProps, "factor")
-        #     row.prop(retimerProps, "pivot")
-
-        #     # apply ###
-        #     row = box.row()
-        #     row.separator(factor=0.1)
-        #     compo = layout.row()
-        #     compo.separator(factor=2)
-        #     compo.scale_y = 1.2
-        #     compo.operator("uas_shot_manager.retimerapply", text="Rescale")
-        #     compo.separator(factor=2)
 
         elif retimerProps.mode == "CLEAR_ANIM":
             row = box.row(align=True)
@@ -256,9 +231,6 @@ class UAS_PT_ShotManagerRetimer(Panel):
             compo.scale_y = 1.2
             compo.operator("uas_shot_manager.retimerapply", text="Move")
             compo.separator(factor=2)
-
-        else:
-            pass
 
 
 class UAS_PT_ShotManagerRetimer_Settings(Panel):
@@ -328,9 +300,9 @@ class UAS_ShotManager_GetCurrentFrameFor(Operator):
 
         currentFrame = scene.frame_current
 
-        if "start_frame" == self.propertyToUpdate:
+        if self.propertyToUpdate == "start_frame":
             retimerProps.start_frame = currentFrame
-        elif "end_frame" == self.propertyToUpdate:
+        elif self.propertyToUpdate == "end_frame":
             retimerProps.end_frame = currentFrame
         else:
             retimerProps[self.propertyToUpdate] = currentFrame
@@ -358,7 +330,7 @@ class UAS_ShotManager_RetimerApply(Operator):
         endFrame = retimerProps.end_frame
 
         # wkip travail en cours
-        if "INSERT" == retimerProps.mode:
+        if retimerProps.mode == "INSERT":
 
             print(" start frame for Insert: ", startFrame)
 
@@ -377,7 +349,7 @@ class UAS_ShotManager_RetimerApply(Operator):
                 retimerProps.applyToShots,
                 retimerProps.applyToVse,
             )
-        elif "DELETE" == retimerProps.mode:
+        elif retimerProps.mode == "DELETE":
             retimer.retimeScene(
                 context.scene,
                 retimerProps.mode,
@@ -393,7 +365,7 @@ class UAS_ShotManager_RetimerApply(Operator):
                 retimerProps.applyToShots,
                 retimerProps.applyToVse,
             )
-        elif "RESCALE" == retimerProps.mode:
+        elif retimerProps.mode == "RESCALE":
             retimer.retimeScene(
                 context.scene,
                 retimerProps.mode,
@@ -409,7 +381,7 @@ class UAS_ShotManager_RetimerApply(Operator):
                 retimerProps.applyToShots,
                 retimerProps.applyToVse,
             )
-        elif "CLEAR_ANIM" == retimerProps.mode:
+        elif retimerProps.mode == "CLEAR_ANIM":
             retimer.retimeScene(
                 context.scene,
                 retimerProps.mode,
@@ -446,11 +418,10 @@ class UAS_ShotManager_RetimerApply(Operator):
         # context.region.tag_redraw()
         bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
 
-        if retimerProps.move_current_frame:
-            if retimerProps.mode == "INSERT":
-                context.scene.frame_current = context.scene.frame_current + (
-                    retimerProps.end_frame - retimerProps.start_frame
-                )
+        if retimerProps.move_current_frame and retimerProps.mode == "INSERT":
+            context.scene.frame_current = context.scene.frame_current + (
+                retimerProps.end_frame - retimerProps.start_frame
+            )
 
         return {"FINISHED"}
 

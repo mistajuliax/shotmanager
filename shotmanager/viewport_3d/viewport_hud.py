@@ -91,15 +91,17 @@ class UAS_ShotManager_DrawCameras_UI(bpy.types.Operator):
         # For all camera which have a shot draw on the ui a list of shots associated with it.
         blf.size(0, font_size, 72)
         for obj in scn.objects:
-            if obj.type == "CAMERA":
-                if not (context.space_data.region_3d.view_perspective == "CAMERA" and obj == context.scene.camera):
-                    pos_2d = view3d_utils.location_3d_to_region_2d(
-                        context.region, context.space_data.region_3d, mathutils.Vector(obj.location)
-                    )
-                    if pos_2d is not None:
-                        # print("pos x:", pos_2d[0])
-                        # print("pos y:", pos_2d[1])
-                        draw_all_shots_names(context, obj, pos_2d[0], pos_2d[1], vertical=True)
+            if obj.type == "CAMERA" and (
+                context.space_data.region_3d.view_perspective != "CAMERA"
+                or obj != context.scene.camera
+            ):
+                pos_2d = view3d_utils.location_3d_to_region_2d(
+                    context.region, context.space_data.region_3d, mathutils.Vector(obj.location)
+                )
+                if pos_2d is not None:
+                    # print("pos x:", pos_2d[0])
+                    # print("pos y:", pos_2d[1])
+                    draw_all_shots_names(context, obj, pos_2d[0], pos_2d[1], vertical=True)
 
 
 def draw_all_shots_names(context, cam, pos_x, pos_y, vertical=False):
@@ -111,7 +113,7 @@ def draw_all_shots_names(context, cam, pos_x, pos_y, vertical=False):
     x_horizontal_offset = 80
 
     shotsList = props.getShotsUsingCamera(cam)
-    if 0 == len(shotsList):
+    if len(shotsList) == 0:
         return ()
 
     shot_names_by_camera = defaultdict(list)
@@ -121,7 +123,7 @@ def draw_all_shots_names(context, cam, pos_x, pos_y, vertical=False):
     #
     # Filter out shots in order to restrict the number of shots to be displayed as a list
     #
-    shot_trim_info = dict()
+    shot_trim_info = {}
     shot_trim_length = 2  # Limit the display of x shot before and after the current_shot
 
     for c, shots in shot_names_by_camera.items():
@@ -205,8 +207,12 @@ def view3d_camera_border(context):
     # move into pixelspace
     from bpy_extras.view3d_utils import location_3d_to_region_2d
 
-    frame_px = [location_3d_to_region_2d(context.region, context.space_data.region_3d, v) for v in frame]
-    return frame_px
+    return [
+        location_3d_to_region_2d(
+            context.region, context.space_data.region_3d, v
+        )
+        for v in frame
+    ]
 
 
 class UAS_ShotManager_DrawHUD(bpy.types.Operator):

@@ -46,16 +46,27 @@ print("debug_parse_xml.py")
 
 
 def _getFirstChildWithName(parentNode, name):
-    for node in parentNode.childNodes:
-        # print(f"video - node.localName: {node.localName}")
-        if name == node.localName:
-            return node
-    return None
+    return next(
+        (node for node in parentNode.childNodes if name == node.localName),
+        None,
+    )
 
 
 readFile = False
 
 from xml.dom.minidom import parse
+
+# seq.tagName
+#'sequence'
+
+# media = seq.getElementsByTagName("media")
+# mediaVideo = media.getElementsByTagName("video")
+# mediaVideoFormat = mediaVideo.getElementsByTagName("format")
+
+seqMedia = None
+seqMediaVideo = None
+seqMediaVideoFormat = None
+videoSampleCharacteristics = None
 
 if readFile:
 
@@ -64,44 +75,32 @@ if readFile:
     dom1 = parse(filename)
 
     seq = dom1.getElementsByTagName("sequence")[0]
-    # seq.tagName
-    #'sequence'
-
-    # media = seq.getElementsByTagName("media")
-    # mediaVideo = media.getElementsByTagName("video")
-    # mediaVideoFormat = mediaVideo.getElementsByTagName("format")
-
-    seqMedia = None
-    seqMediaVideo = None
-    seqMediaVideoFormat = None
-    videoSampleCharacteristics = None
-
-    seqCharacteristics = dict()
+    seqCharacteristics = {}
 
     for node in seq.childNodes:
         print(f"media - node.localName: {node.localName}")
-        if "media" == node.localName:
+        if node.localName == "media":
             seqMedia = node
             break
 
     if seqMedia is not None:
         for node in seqMedia.childNodes:
             print(f"video - node.localName: {node.localName}")
-            if "video" == node.localName:
+            if node.localName == "video":
                 seqMediaVideo = node
                 break
 
     if seqMediaVideo is not None:
         for node in seqMediaVideo.childNodes:
             print(f"format - node.localName: {node.localName}")
-            if "format" == node.localName:
+            if node.localName == "format":
                 seqMediaVideoFormat = node
                 break
 
     if seqMediaVideoFormat is not None:
         for node in seqMediaVideoFormat.childNodes:
             print(f"samplecharacteristics - node.localName: {node.localName}")
-            if "samplecharacteristics" == node.localName:
+            if node.localName == "samplecharacteristics":
                 videoSampleCharacteristics = node
                 break
 
@@ -155,12 +154,7 @@ else:  # write to file
 
     seq = dom1.getElementsByTagName("sequence")[0]
 
-    seqMedia = None
-    seqMediaVideo = None
-    seqMediaVideoFormat = None
-    videoSampleCharacteristics = None
-
-    videoCharacteristics = dict()
+    videoCharacteristics = {}
 
     seqMedia = _getFirstChildWithName(seq, "media")
     if seqMedia is not None:

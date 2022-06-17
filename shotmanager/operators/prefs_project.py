@@ -146,7 +146,7 @@ class UAS_ShotManager_ProjectSettings_Prefs(Operator):
             box = layout.box()
             for prop in settingsList:
                 row = box.row(align=True)
-                row.label(text=prop[0] + ":")
+                row.label(text=f"{prop[0]}:")
                 row.label(text=str(prop[1]))
 
     def execute(self, context):

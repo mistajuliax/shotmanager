@@ -71,7 +71,7 @@ class MontageOtio(MontageInterface):
     def set_montage_characteristics(self, resolution_x=-1, resolution_y=-1, framerate=-1, duration=-1):
         """
         """
-        self._characteristics = dict()
+        self._characteristics = {}
         # self._characteristics["framerate"] = framerate  # timebase
         self._characteristics["resolution_x"] = resolution_x  # width
         self._characteristics["resolution_y"] = resolution_y  # height
@@ -81,29 +81,22 @@ class MontageOtio(MontageInterface):
 
     def get_fps(self):
         time = self.timeline.duration()
-        rate = int(time.rate)
-        return rate
+        return int(time.rate)
 
     def get_frame_duration(self):
         time = self.timeline.duration()
-        duration = int(time.value)
-        return duration
+        return int(time.value)
 
     def newSequence(self):
         if self.sequencesList is None:
-            self.sequencesList = list()
+            self.sequencesList = []
         newSeq = SequenceOtio(self)
         self.sequencesList.append(newSeq)
         return newSeq
 
     def getSequenceNameFromMediaName(self, fileName):
-        seqName = ""
-
         media_name_splited = fileName.split("_")
-        if 2 <= len(media_name_splited):
-            seqName = media_name_splited[1]
-
-        return seqName
+        return media_name_splited[1] if len(media_name_splited) >= 2 else ""
 
     def fillMontageInfoFromOtioFile(self, otioFile=None, refVideoTrackInd=0, verboseInfo=False):
 
@@ -118,13 +111,14 @@ class MontageOtio(MontageInterface):
             return
 
         def _getParentSeqIndex(seqList, seqName):
-            #    print("\n_getParentSeqIndex: seqName: ", seqName)
-            for i, seq in enumerate(seqList):
-                if seqName in seq.get_name().lower():
-                    #    print(f"    : {seq.name}, i: {i}")
-                    return i
-
-            return -1
+            return next(
+                (
+                    i
+                    for i, seq in enumerate(seqList)
+                    if seqName in seq.get_name().lower()
+                ),
+                -1,
+            )
 
         def _getVideoCharacteristicsFromXML(xmlDom):
             #    print("_getVideoCharacteristicsFromXML")
@@ -134,7 +128,7 @@ class MontageOtio(MontageInterface):
 
             seq = xmlDom.getElementsByTagName("sequence")[0]
 
-            seqCharacteristics = dict()
+            seqCharacteristics = {}
 
             seqDuration = utils_xml.getFirstChildWithName(seq, "duration")
             if seqDuration is not None:
@@ -152,7 +146,7 @@ class MontageOtio(MontageInterface):
             seqMediaVideoFormat = None
             videoSampleCharacteristics = None
 
-            videoCharacteristics = dict()
+            videoCharacteristics = {}
 
             seqMedia = utils_xml.getFirstChildWithName(seq, "media")
             if seqMedia is not None:
@@ -224,16 +218,18 @@ class MontageOtio(MontageInterface):
 
         def _get_name_from_xml_clip_name(clip, xmlClipNames):
             newName = clip.name
-            if "Stack" == type(clip).__name__:
-                if hasattr(clip, "metadata"):
-                    if "fcp_xml" in clip.metadata:
-                        if "@id" in clip.metadata["fcp_xml"]:
-                            clipId = clip.metadata["fcp_xml"]["@id"]
-                            for item in xmlClipNames:
-                                if item[0] == clipId:
-                                    # self.name = item[1]
-                                    newName = item[1]
-                                    break
+            if (
+                type(clip).__name__ == "Stack"
+                and hasattr(clip, "metadata")
+                and "fcp_xml" in clip.metadata
+                and "@id" in clip.metadata["fcp_xml"]
+            ):
+                clipId = clip.metadata["fcp_xml"]["@id"]
+                for item in xmlClipNames:
+                    if item[0] == clipId:
+                        # self.name = item[1]
+                        newName = item[1]
+                        break
             return newName
 
         xmlClipNames = []
@@ -357,14 +353,13 @@ class SequenceOtio(SequenceInterface):
 
     def __init__(self, parent):
         super().__init__(parent)
-        pass
 
     def newShot(self, shot):
         """
             shot is an otio clip
         """
         if self.shotsList is None:
-            self.shotsList = list()
+            self.shotsList = []
         newShot = ShotOtio(self, shot)
         self.shotsList.append(newShot)
         return newShot
@@ -387,8 +382,6 @@ class ShotOtio(ShotInterface):
         # nested edit, not the name of the clip itself! This is an issue when the nested edit is shared by
         # several clips. Otio works like this so the real clip name has to be set afterwards by reading the xml file.
         self.name = self.clip.name
-
-        pass
 
     def get_name(self):
         return self.name
@@ -420,53 +413,34 @@ class ShotOtio(ShotInterface):
         ###############
         # wkip note: this is SLOW SLOW becauce the whole xml file is parsed every time. It should be parsed once for all
 
-        if "Stack" == clipType:
-            # InfoStr += ", b stack "
-            if self.parent.parent.otioFile is not None:
-                # InfoStr += ", in otio "
-                # InfoStr += f"\n   Otio file: {self.parent.parent.otioFile}"
-                # InfoStr += f"\n   Otio file ext: {str(Path(self.parent.parent.otioFile).suffix).lower()}"
-                if ".xml" == str(Path(self.parent.parent.otioFile).suffix).lower():
-                    # InfoStr += ", in xml "
-                    # print(f" dir clip:{dir(self.clip)}")
-                    # if "metadata" in self.clip:
-                    # print("metadata in ")
-                    if hasattr(self.clip, "metadata"):
-                        # print(f" la")
+        if (
+            clipType == "Stack"
+            and self.parent.parent.otioFile is not None
+            and str(Path(self.parent.parent.otioFile).suffix).lower() == ".xml"
+            and hasattr(self.clip, "metadata")
+            and "fcp_xml" in self.clip.metadata
+            and "@id" in self.clip.metadata["fcp_xml"]
+        ):
+            # print(f"  la la la encore")
+            # InfoStr += ", in @id "
+            clipId = self.clip.metadata["fcp_xml"]["@id"]
+            InfoStr += f", clip ID: {clipId}"
 
-                        if "fcp_xml" in self.clip.metadata:
-                            # print(f"  la la la")
-                            # InfoStr += ", in fcp_xml "
-                            if "@id" in self.clip.metadata["fcp_xml"]:
-                                # print(f"  la la la encore")
-                                # InfoStr += ", in @id "
-                                clipId = self.clip.metadata["fcp_xml"]["@id"]
-                                InfoStr += f", clip ID: {clipId}"
+            from xml.dom.minidom import parse
 
-                                from xml.dom.minidom import parse
+            xmlDom = parse(self.parent.parent.otioFile)
+            clipItems = xmlDom.getElementsByTagName("clipitem")
 
-                                xmlDom = parse(self.parent.parent.otioFile)
-                                clipItems = xmlDom.getElementsByTagName("clipitem")
-
-                                for item in clipItems:
-                                    if item.getAttribute("id") == clipId:
-                                        #   print(f'item.getAttribute("id"): {item.getAttribute("id")}')
-                                        nameItem = item.getElementsByTagName("name")[0]
-                                        #   print(f"nameItem: {nameItem}")
-                                        clipName = nameItem.childNodes[0].nodeValue
-                                        # for child in nameItem.childNodes:
-                                        #     clipName = child.nodeValue
-                                        #     print(f"   child.nodeValue: {clipName}")
-                                        break
-
-                                #         subXml = item.toxml()
-                                #         # print(f" To XML: {subXml}")
-                                #         clipNameItem = item.getElementsByTagName("name")
-                                #         print(f"    clipNameItem {clipNameItem}")
-                                #         clipName = clipNameItem.data
-                                #         print(f"    clipName {clipName}")
-                                # print(f"- item: {item.getAttribute('id')}")
-                                # if item.getAttribute('id') == '':
+            for item in clipItems:
+                if item.getAttribute("id") == clipId:
+                    #   print(f'item.getAttribute("id"): {item.getAttribute("id")}')
+                    nameItem = item.getElementsByTagName("name")[0]
+                    #   print(f"nameItem: {nameItem}")
+                    clipName = nameItem.childNodes[0].nodeValue
+                    # for child in nameItem.childNodes:
+                    #     clipName = child.nodeValue
+                    #     print(f"   child.nodeValue: {clipName}")
+                    break
 
         # print(f" Clip ID: {InfoStr}")
 
@@ -478,23 +452,20 @@ class ShotOtio(ShotInterface):
         super().printInfo(only_clip_info=only_clip_info)
         clipType = self.get_type()
         # print(f"clipType: {clipType}")
-        if "Clip" == clipType:
-            infoStr += f"             - Type: OTIO Media Clip"
-        elif "Stack" == clipType:
-            infoStr += f"             - Type: OTIO Nested Edit (Stack)"
-        #   infoStr += f"   Clip Name: {self.get_name()}"
-        #   infoStr += f"\n   Clip: {self.clip}"
+        if clipType == "Clip":
+            infoStr += "             - Type: OTIO Media Clip"
+        elif clipType == "Stack":
+            infoStr += "             - Type: OTIO Nested Edit (Stack)"
         else:
             infoStr += f"             - Type: OTIO {clipType}"
 
         infoStr += f",    Media: {ow.get_clip_media_path(self.clip)}"
         emptyDuration = ow.get_clip_empty_duration(self.clip, self.parent.parent.get_fps())
-        if 0 != emptyDuration:
+        if emptyDuration != 0:
             infoStr += f"\n               Empty duration lenght: {emptyDuration}"
         print(infoStr)
 
     def get_type(self):
-        clipType = type(self.clip).__name__
         # print(f"clipType: {clipType}")
         # if "Clip" == clipType:
         #     infoStr += f"             - Type: OTIO Media Clip"
@@ -503,7 +474,7 @@ class ShotOtio(ShotInterface):
         # else:
         #     infoStr += f"             - Type: OTIO {clipType}"
 
-        return clipType
+        return type(self.clip).__name__
 
     def get_frame_start(self):
         return ow.get_clip_frame_start(self.clip, self.parent.parent.get_fps())
@@ -534,9 +505,6 @@ class ShotOtio(ShotInterface):
         return ow.get_clip_frame_offset_end(self.clip, self.parent.parent.get_fps())
 
     def get_media_soundfiles(self):
-        sounds = []
-        sounds.append("c:\\toto.mp3")
-
         tracks = self.timeline.video_tracks()
         for i, track in enumerate(tracks):
             if refVideoTrackInd == i:
@@ -564,4 +532,4 @@ class ShotOtio(ShotInterface):
                         media_name = os.path.splitext(filename)[0]
                         media_name_lower = media_name.lower()
 
-        return sounds
+        return ["c:\\toto.mp3"]

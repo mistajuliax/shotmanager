@@ -59,8 +59,7 @@ class UAS_Retimer_Properties(PropertyGroup):
     )
 
     def _get_start_frame(self):
-        val = self.get("start_frame", True)
-        return val
+        return self.get("start_frame", True)
 
     def _set_start_frame(self, value):
         if value >= self.end_frame:
@@ -82,8 +81,7 @@ class UAS_Retimer_Properties(PropertyGroup):
     )
 
     def _get_end_frame(self):
-        val = self.get("end_frame", True)
-        return val
+        return self.get("end_frame", True)
 
     def _set_end_frame(self, value):
         if value <= self.start_frame:

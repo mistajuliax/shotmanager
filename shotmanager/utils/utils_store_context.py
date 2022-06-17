@@ -87,9 +87,9 @@ def storeUserRenderSettings(context, userRenderSettings):
         "use_stamp_time",
     ]
 
-    categImageStamping = dict()
-    for prop in propertiesArr:
-        categImageStamping[prop] = getattr(context.scene.render, prop)
+    categImageStamping = {
+        prop: getattr(context.scene.render, prop) for prop in propertiesArr
+    }
 
     userRenderSettings["categ_image_stamping"] = categImageStamping
     # print(f"userRenderSettings: \n{userRenderSettings}")

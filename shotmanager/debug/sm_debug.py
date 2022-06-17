@@ -146,7 +146,7 @@ class UAS_Debug_RunFunction(Operator):
         print("\nUAS_Debug_RunFunction: ", self.functionName)
         print("\n")
 
-        if "parseOtioFile" == self.functionName:
+        if self.functionName == "parseOtioFile":
             from ..otio.otio_wrapper import parseOtioFile
             from ..otio.imports import getSequenceListFromOtio
 

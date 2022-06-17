@@ -36,10 +36,7 @@ def get_grease_pencil(gpencil_obj_name="GPencil") -> bpy.types.GreasePencil:
         # rename grease pencil
         bpy.context.scene.objects[-1].name = gpencil_obj_name
 
-    # Get grease pencil object
-    gpencil = bpy.context.scene.objects[gpencil_obj_name]
-
-    return gpencil
+    return bpy.context.scene.objects[gpencil_obj_name]
 
 
 def get_grease_pencil_layer(
@@ -56,9 +53,8 @@ def get_grease_pencil_layer(
     # Get grease pencil layer or create one if none exists
     if gpencil.data.layers and gpencil_layer_name in gpencil.data.layers:
         gpencil_layer = gpencil.data.layers[gpencil_layer_name]
-    else:
-        if create_layer:
-            gpencil_layer = gpencil.data.layers.new(gpencil_layer_name, set_active=True)
+    elif create_layer:
+        gpencil_layer = gpencil.data.layers.new(gpencil_layer_name, set_active=True)
 
     if clear_layer:
         gpencil_layer.clear()  # clear all previous layer data
@@ -89,9 +85,9 @@ def add_grease_pencil_layer(
     if clear_layer:
         gpencil_layer.clear()  # clear all previous layer data
 
-    if "BOTTOM" == order:
+    if order == "BOTTOM":
         # < len(gpencil.data.layers)
-        while 0 < gpencil.data.layers.find(gpencil_layer_name):
+        while gpencil.data.layers.find(gpencil_layer_name) > 0:
             gpencil.data.layers.move(gpencil_layer, "DOWN")
 
     gp_frame = gpencil_layer.frames.new(0)

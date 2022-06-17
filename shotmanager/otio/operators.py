@@ -111,8 +111,14 @@ class UAS_ShotManager_Export_OTIO(Operator):
 def list_sequences_from_edl(self, context):
     res = config.gSeqEnumList
     # res = list()
-    nothingList = list()
-    nothingList.append(("NO_SEQ", "No Sequence Found", "No sequence found in the specified EDL file", 0))
+    nothingList = [
+        (
+            "NO_SEQ",
+            "No Sequence Found",
+            "No sequence found in the specified EDL file",
+            0,
+        )
+    ]
 
     # seqList = getSequenceListFromOtioTimeline(config.gMontageOtio)
     # for i, item in enumerate(seqList):
@@ -125,17 +131,15 @@ def list_sequences_from_edl(self, context):
     #         (cam.name, cam.name, 'Use the exising scene camera named "' + cam.name + '"\nfor the new shot', i + 1)
     #     )
 
-    if res is None or 0 == len(res):
+    if res is None or len(res) == 0:
         res = nothingList
     return res
 
 
 def list_video_tracks_from_edl(self, context):
     res = config.gTracksEnumList
-    nothingList = list()
-    nothingList.append(("1 -", "1 ---", "", 0))
-
-    if res is None or 0 == len(res):
+    nothingList = [("1 -", "1 ---", "", 0)]
+    if res is None or len(res) == 0:
         res = nothingList
     return res
 
@@ -347,7 +351,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
         #     self.mediaHaveHandles = False
         #     self.mediaHandlesDuration = 0
 
-        if "" != self.opArgs:
+        if self.opArgs != "":
             argsDict = json.loads(self.opArgs)
             # print(f" argsDict: {argsDict}")
             # print(f" argsDict['otioFile']: {argsDict['otioFile']}")
@@ -391,25 +395,26 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
 
         config.gMontageOtio = None
 
-        if "" == self.otioFile:
-            print(f"*** Otio file not defined - Cannot open EDL file ***")
+        if self.otioFile == "":
+            print("*** Otio file not defined - Cannot open EDL file ***")
             return {"CANCELLED"}
         if not Path(self.otioFile).exists():
-            print(f"*** Otio file not found - Cannot open EDL file ***")
+            print("*** Otio file not found - Cannot open EDL file ***")
             print(f"***      Otio file: {self.otioFile}")
             return {"CANCELLED"}
 
-        if "" != self.otioFile and Path(self.otioFile).exists():
+        if self.otioFile != "" and Path(self.otioFile).exists():
             config.gMontageOtio = MontageOtio()
             config.gMontageOtio.initialize(self.otioFile)
 
-            config.gTracksEnumList = list()
+            config.gTracksEnumList = []
             numVideoTracks = len(config.gMontageOtio.timeline.video_tracks())
-            for i in range(0, numVideoTracks):
-                config.gTracksEnumList.append((str(i), str(i + 1), "", i))
+            config.gTracksEnumList.extend(
+                (str(i), str(i + 1), "", i) for i in range(numVideoTracks)
+            )
 
             self.refVideoTrackInd = 0
-            if "PREVIZ" == self.importStepMode:
+            if self.importStepMode == "PREVIZ":
                 self.refVideoTrackInd = min(numVideoTracks - 1, 0)
             print(
                 f"**** self.importStepMode: {self.importStepMode}, self.refVideoTrackInd: {self.refVideoTrackInd}, numVideoTracks: {numVideoTracks}"
@@ -426,7 +431,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
             currentSeqName = (scene.name)[6:]
             print(f"Current seq name: {currentSeqName}")
             currentSeqIndex = -1
-            config.gSeqEnumList = list()
+            config.gSeqEnumList = []
             if len(config.gMontageOtio.sequencesList):
                 for i, seq in enumerate(config.gMontageOtio.sequencesList):
                     strDebug = f"- seqList: i:{i}, seq: {seq.get_name()}"
@@ -437,10 +442,16 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
                     config.gSeqEnumList.append((str(i), seq.get_name(), f"Import sequence {seq.get_name()}", i + 1))
             else:
                 config.gSeqEnumList.append(
-                    (str(0), " ** No Sequence in Ref Track **", f"No sequence found in the specifed reference track", 1)
+                    (
+                        str(0),
+                        " ** No Sequence in Ref Track **",
+                        "No sequence found in the specifed reference track",
+                        1,
+                    )
                 )
 
-            if -1 != currentSeqIndex:
+
+            if currentSeqIndex != -1:
                 self.sequenceList = config.gSeqEnumList[currentSeqIndex][0]
             else:
                 self.sequenceList = config.gSeqEnumList[0][0]
@@ -499,7 +510,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
         row.separator(factor=3)
         row.prop(self, "otioFile", text="")
 
-        if "" == self.otioFile or not Path(self.otioFile).exists():
+        if self.otioFile == "" or not Path(self.otioFile).exists():
             row = box.row()
             row.alert = True
             row.label(text="Specified EDL file not found! - Verify your local depot")  # wkip rrs specific
@@ -561,7 +572,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
             # sm_montage.printInfo()
 
         else:
-            labelText = f"Start: {-1}, End: {-1}, Num Shots: {0}"
+            labelText = 'Start: -1, End: -1, Num Shots: 0'
 
         row = box.row(align=True)
         row.label(text=labelText)
@@ -570,7 +581,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
             row = box.row(align=True)
             row.prop(self, "conformMode")
 
-        if "CREATE" == self.conformMode or config.uasDebug:
+        if self.conformMode == "CREATE" or config.uasDebug:
             row = box.row(align=True)
             row.prop(self, "offsetTime")
             # row.separator(factor=3)
@@ -579,7 +590,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
             subrow.prop(self, "importAtFrame")
 
         row = layout.row(align=True)
-        if "CREATE" == self.conformMode:
+        if self.conformMode == "CREATE":
             row.label(text="Create Settings:")
         else:
             row.label(text="Update Settings:")
@@ -592,13 +603,10 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
         ############
         # Create UI
         ############
-        if "CREATE" == self.conformMode:
+        if self.conformMode == "CREATE":
             box.prop(self, "createCameras")
             box.prop(self, "reformatShotNames")
 
-        ############
-        # Update UI
-        ############
         else:
             boxRow = box.row(align=True)
             boxRow.prop(self, "changeShotsTiming")
@@ -695,7 +703,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO_RRS(Operator):
 
         # audioTracksToImport = [19, 20]
 
-        if "CREATE" == self.conformMode:
+        if self.conformMode == "CREATE":
             # track indices are starting from 1, not 0!!
             videoTracksToImport = [1]
 
@@ -888,7 +896,7 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO(Operator):
 
         from pathlib import Path
 
-        if "" != self.otioFile and Path(self.otioFile).exists():
+        if self.otioFile != "" and Path(self.otioFile).exists():
             timeline = opentimelineio.adapters.read_from_file(self.otioFile)
             time = timeline.duration()
             rate = int(time.rate)
@@ -896,8 +904,9 @@ class UAS_ShotManager_OT_Create_Shots_From_OTIO(Operator):
             if rate != context.scene.render.fps:
                 box.alert = True
                 box.label(
-                    text="!!! Scene fps is " + str(context.scene.render.fps) + ", imported edit is " + str(rate) + "!!"
+                    text=f"!!! Scene fps is {str(context.scene.render.fps)}, imported edit is {rate}!!"
                 )
+
                 box.alert = False
 
         row = layout.row(align=True)
@@ -1010,12 +1019,12 @@ class UAS_OTIO_OpenFileBrowser(Operator, ImportHelper):  # from bpy_extras.io_ut
         # print("ex File name:", filename)
         # print("ex File extension:", extension)
 
-        if "CREATE_SHOTS" == self.importMode:
+        if self.importMode == "CREATE_SHOTS":
             # bpy.ops.uasshotmanager.createshotsfromotio("INVOKE_DEFAULT", otioFile=self.filepath)
             bpy.ops.uasshotmanager.createshotsfromotio_rrs("INVOKE_DEFAULT", otioFile=self.filepath)
-        elif "IMPORT_EDIT" == self.importMode:
+        elif self.importMode == "IMPORT_EDIT":
             bpy.ops.uas_video_shot_manager.importeditfromotio("INVOKE_DEFAULT", otioFile=self.filepath)
-        elif "PARSE_EDIT" == self.importMode:
+        elif self.importMode == "PARSE_EDIT":
             bpy.ops.uas_video_shot_manager.parseeditfromotio("INVOKE_DEFAULT", otioFile=self.filepath)
 
         return {"FINISHED"}

@@ -29,10 +29,6 @@ def setRRS_StampInfoSettings(scene):
 
         props = scene.UAS_shot_manager_props
 
-        projProp_Name = props.project_name
-        projProp_resolution_x = 1280
-        projProp_resolution_y = 720
-
         stampInfoSettings = scene.UAS_StampInfo_Settings
 
         stampInfoSettings.stampInfoUsed = scene.UAS_shot_manager_props.useStampInfoDuringRendering
@@ -41,7 +37,10 @@ def setRRS_StampInfoSettings(scene):
 
             stampInfoSettings.tmp_usePreviousValues = True
 
+            projProp_resolution_x = 1280
             stampInfoSettings.tmp_previousResolution_x = projProp_resolution_x  # scene.render.resolution_x
+            projProp_resolution_y = 720
+
             stampInfoSettings.tmp_previousResolution_y = projProp_resolution_y  # scene.render.resolution_y
             # scene.render.resolution_x = 1280
             # scene.render.resolution_y = 960
@@ -69,6 +68,7 @@ def setRRS_StampInfoSettings(scene):
             stampInfoSettings.logoPosNormX = 0.018
             stampInfoSettings.logoPosNormY = 0.014
 
+            projProp_Name = props.project_name
             stampInfoSettings.projectName = projProp_Name
             stampInfoSettings.projectUsed = False
 

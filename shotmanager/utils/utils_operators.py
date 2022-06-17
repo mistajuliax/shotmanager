@@ -42,8 +42,6 @@ class UAS_OT_EmptyOperator(Operator):
     bl_options = {"INTERNAL"}
 
     def invoke(self, context, event):
-        pass
-
         return {"FINISHED"}
 
 
@@ -86,7 +84,7 @@ class UAS_Utils_GetCurrentFrameForTimeRange(Operator):
         scene = context.scene
         self.opArgs = self.opArgs.replace("'", '"')
         print(f" self.opArgs: {self.opArgs}")
-        if "" != self.opArgs:
+        if self.opArgs != "":
             argsDict = json.loads(self.opArgs)
             firstItem = next(iter(argsDict))
 

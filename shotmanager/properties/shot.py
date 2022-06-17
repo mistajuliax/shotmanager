@@ -90,7 +90,10 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     def getOutputFileName(
         self, rootFilePath="", fullPath=False, fullPathOnly=False, specificFrame=None, noExtension=False
     ):
-        _logger.debug(f"*** shot.getOutputFileName: Deprecated - use getOutputMediaPath")
+        _logger.debug(
+            "*** shot.getOutputFileName: Deprecated - use getOutputMediaPath"
+        )
+
         return self.parentScene.UAS_shot_manager_props.getShotOutputFileName(
             self,
             rootFilePath=rootFilePath,
@@ -147,8 +150,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         return shotName
 
     def _get_name(self):
-        val = self.get("name", "-")
-        return val
+        return self.get("name", "-")
 
     def _set_name(self, value):
         """ Set a unique name to the shot
@@ -180,8 +182,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     #############
 
     def _get_start(self):
-        val = self.get("start", 25)
-        return val
+        return self.get("start", 25)
 
     # *** behavior here must match the one of start and end of shot preferences ***
     def _set_start(self, value):
@@ -189,14 +190,8 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         self["start"] = value
         if self.durationLocked:
             self["end"] = self.start + duration - 1
-        else:
-            # increase end value if start is superior to end
-            # if self.start > self.end:
-            #     self["end"] = self.start
-
-            # prevent start to go above end (more user error proof)
-            if self.start > self.end:
-                self["start"] = self.end
+        elif self.start > self.end:
+            self["start"] = self.end
 
     def _update_start(self, context):
         self.selectShotInUI()
@@ -215,8 +210,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     #############
 
     def _get_end(self):
-        val = self.get("end", 30)
-        return val
+        return self.get("end", 30)
 
     # *** behavior here must match the one of start and end of shot preferences ***
     def _set_end(self, value):
@@ -224,14 +218,8 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         self["end"] = value
         if self.durationLocked:
             self["start"] = self.end - duration + 1
-        else:
-            # reduce start value if end is lowr than start
-            # if self.start > self.end:
-            #    self["start"] = self.end
-
-            # prevent end to go below start (more user error proof)
-            if self.start > self.end:
-                self["end"] = self.start
+        elif self.start > self.end:
+            self["end"] = self.start
 
     def _update_end(self, context):
         self.selectShotInUI()
@@ -252,8 +240,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         """ Returns the shot duration in frames
             In Blender - and in Shot Manager - the last frame of the shot is included in the rendered images
         """
-        duration = self.end - self.start + 1
-        return duration
+        return self.end - self.start + 1
 
     def setDuration(self, duration, bypassLock=False):
         """ Set the shot duration in frames
@@ -273,8 +260,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         # not used, normal it's the fake property
         self.get("duration_fp", -1)
 
-        realVal = self.getDuration()
-        return realVal
+        return self.getDuration()
 
     def _set_duration_fp(self, value):
         # print("\n*** _update_duration_fp: New state: ", self.duration_fp)
@@ -318,10 +304,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         # print("self", str(self))  # this shot
         # print("object", str(object))  # all the objects of the property type
 
-        if object.type == "CAMERA" and object.name in self.parentScene.objects:
-            return True
-        else:
-            return False
+        return object.type == "CAMERA" and object.name in self.parentScene.objects
 
     camera: PointerProperty(
         name="Camera",
@@ -336,7 +319,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
             Return True if the camera is really there, False otherwise
             Note: This doesn't change the camera attribute of the shot
         """
-        cameraIsInvalid = not self.camera is None
+        cameraIsInvalid = self.camera is not None
         if self.camera is not None:
             try:
                 if bpy.context.scene.objects[self.camera.name] is None:
@@ -349,9 +332,14 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         return cameraIsInvalid
 
     def makeCameraUnique(self):
-        if self.camera is not None:
-            if 1 < self.parentScene.UAS_shot_manager_props.getNumSharedCamera(self.camera):
-                self.camera = utils.duplicateObject(self.camera, newName="Cam_" + self.name)
+        if (
+            self.camera is not None
+            and self.parentScene.UAS_shot_manager_props.getNumSharedCamera(
+                self.camera
+            )
+            > 1
+        ):
+            self.camera = utils.duplicateObject(self.camera, newName=f"Cam_{self.name}")
 
     ##############
     # color
@@ -361,11 +349,10 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         defaultVal = [1.0, 1.0, 1.0, 1.0]
         props = self.parentScene.UAS_shot_manager_props
 
-        if props.use_camera_color:
-            if self.camera is not None:
-                defaultVal[0] = self.camera.color[0]
-                defaultVal[1] = self.camera.color[1]
-                defaultVal[2] = self.camera.color[2]
+        if props.use_camera_color and self.camera is not None:
+            defaultVal[0] = self.camera.color[0]
+            defaultVal[1] = self.camera.color[1]
+            defaultVal[2] = self.camera.color[2]
 
         val = self.get("color", defaultVal)
 
@@ -425,24 +412,24 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         return self.camera is not None and len(self.camera.data.background_images)
 
     def updateClipLinkToShotStart(self):
-        if self.camera is not None and len(self.camera.data.background_images):
-            bgClip = self.camera.data.background_images[0].clip
-            bgSoundSequence = self.getSoundSequence()
+        if self.camera is None or not len(self.camera.data.background_images):
+            return
+        bgClip = self.camera.data.background_images[0].clip
+        bgSoundSequence = self.getSoundSequence()
 
-            if self.bgImages_linkToShotStart:
-                if bgClip is not None:
-                    bgClip.frame_start = self.start + self.bgImages_offset
-                if bgSoundSequence is not None:
-                    bgSoundSequence.frame_start = self.start + self.bgImages_offset
-            else:
-                if bgClip is not None:
-                    bgClip.frame_start = self.bgImages_offset
-                if bgSoundSequence is not None:
-                    bgSoundSequence.frame_start = self.bgImages_offset
+        if self.bgImages_linkToShotStart:
+            if bgClip is not None:
+                bgClip.frame_start = self.start + self.bgImages_offset
+            if bgSoundSequence is not None:
+                bgSoundSequence.frame_start = self.start + self.bgImages_offset
+        else:
+            if bgClip is not None:
+                bgClip.frame_start = self.bgImages_offset
+            if bgSoundSequence is not None:
+                bgSoundSequence.frame_start = self.bgImages_offset
 
     def _get_bgImages_linkToShotStart(self):
-        val = self.get("bgImages_linkToShotStart", True)
-        return val
+        return self.get("bgImages_linkToShotStart", True)
 
     def _set_bgImages_linkToShotStart(self, value):
         self["bgImages_linkToShotStart"] = value
@@ -470,8 +457,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     )
 
     def _get_bgImages_offset(self):
-        val = self.get("bgImages_offset", 0)
-        return val
+        return self.get("bgImages_offset", 0)
 
     def _set_bgImages_offset(self, value):
         self["bgImages_offset"] = value
@@ -533,7 +519,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     def enableBGSound(self, useBgSound):
         # if self.bgSoundClip is not None:
         #     self.bgSoundClip.mute = not useBgSound
-        if "" != self.bgSoundClipName:
+        if self.bgSoundClipName != "":
             soundClip = self.parentScene.sequence_editor.sequences[self.bgSoundClipName]
             if soundClip is not None:
                 soundClip.mute = not useBgSound
@@ -542,14 +528,19 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         """ Return true if there is no sound sequence -ie self.bgSoundClipName is "") or if a sequence with this name
             is found in the VSE, false otherwise
         """
-        if "" == self.bgSoundClipName or self.bgSoundClipName in self.parentScene.sequence_editor.sequences:
-            return True
-        return False
+        return (
+            self.bgSoundClipName == ""
+            or self.bgSoundClipName in self.parentScene.sequence_editor.sequences
+        )
 
     def getSoundSequence(self):
         soundClip = None
         print("Soundseq")
-        if "" != self.bgSoundClipName and self.bgSoundClipName in self.parentScene.sequence_editor.sequences_all:
+        if (
+            self.bgSoundClipName != ""
+            and self.bgSoundClipName
+            in self.parentScene.sequence_editor.sequences_all
+        ):
             soundClip = self.parentScene.sequence_editor.sequences_all[self.bgSoundClipName]
         if soundClip is not None:
             print(f"Sounclip: {soundClip.name}")
@@ -561,11 +552,10 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     #############
 
     def hasGreasePencil(self):
-        if self.camera is not None:
-            gp_child = utils.get_greasepencil_child(self.camera)
-            return gp_child is not None
-        else:
+        if self.camera is None:
             return False
+        gp_child = utils.get_greasepencil_child(self.camera)
+        return gp_child is not None
 
     #############
     # notes #####
@@ -576,7 +566,7 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
     note03: StringProperty(name="Note 3", description="")
 
     def hasNotes(self):
-        return "" != self.note01 or "" != self.note02 or "" != self.note03
+        return self.note01 != "" or self.note02 != "" or self.note03 != ""
 
     #############
     # interface for Montage #####
@@ -590,7 +580,6 @@ class UAS_ShotManager_Shot(ShotInterface, PropertyGroup):
         """
         #  self.parent = None
         super().__init__()
-        pass
 
     def initialize(self, parent):
         """ Parent is the parent take

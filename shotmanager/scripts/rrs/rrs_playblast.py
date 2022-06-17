@@ -60,8 +60,6 @@ def rrs_animatic_to_vsm(editVideoFile=None, otioFile=None, montageOtio=None, imp
         editVideoFile = r"C:\_UAS_ROOT\RRSpecial\05_Acts\Act01\_Montage\Act01_Edit_Previz.mp4"
     if otioFile is None:
         otioFile = r"C:\_UAS_ROOT\RRSpecial\05_Acts\Act01\_Montage\Act01_Edit_Previz.xml"
-    importMarkers = importMarkers
-
     # if config.uasDebug:
     #        importMarkers = False
 
@@ -137,22 +135,28 @@ def rrs_animatic_to_vsm(editVideoFile=None, otioFile=None, montageOtio=None, imp
     ################
 
     scene.timeline_markers.clear()
-    if importMarkers:
-
+    if importMarkers := importMarkers:
         if montageOtio is None:
             # config.gMontageOtio
             config.gMontageOtio = None
-            if importMarkers and "" != otioFile and Path(otioFile).exists():
+            if importMarkers and otioFile != "" and Path(otioFile).exists():
                 config.gMontageOtio = MontageOtio()
                 config.gMontageOtio.fillMontageInfoFromOtioFile(
                     otioFile=otioFile, refVideoTrackInd=0, verboseInfo=False
                 )
 
-                config.gSeqEnumList = list()
+                config.gSeqEnumList = []
                 print(f"config.gMontageOtio name: {config.gMontageOtio.get_name()}")
-                for i, seq in enumerate(config.gMontageOtio.sequencesList):
-                    #    print(f"- seqList: i:{i}, seq: {seq.get_name()}")
-                    config.gSeqEnumList.append((str(i), seq.get_name(), f"Import sequence {seq.get_name()}", i + 1))
+                config.gSeqEnumList.extend(
+                    (
+                        str(i),
+                        seq.get_name(),
+                        f"Import sequence {seq.get_name()}",
+                        i + 1,
+                    )
+                    for i, seq in enumerate(config.gMontageOtio.sequencesList)
+                )
+
             montageOtio = config.gMontageOtio
 
         importShotMarkersFromMontage(scene, config.gMontageOtio)
@@ -163,12 +167,12 @@ def getSoundFilesForEachShot(montageOtio, seqName, otioFile):
         config.gMontageOtio = MontageOtio()
         config.gMontageOtio.fillMontageInfoFromOtioFile(otioFile=otioFile, refVideoTrackInd=0, verboseInfo=False)
     seq = config.gMontageOtio.get_sequence_by_name(seqName)
-    print(f" here seq sound name avant")
-    soundsDict = dict()
+    print(" here seq sound name avant")
+    soundsDict = {}
     if seq is not None:
         print(f" here seq sound name: {seq.get_name()}")
         seqSoundsListArr = []
-        shotSounds = dict()
+        shotSounds = {}
         for s in seq.getEditShots():
 
             print(f"  shot sound name: {s.get_name()}")
@@ -195,21 +199,16 @@ def rrs_sequence_to_vsm(scene, sequenceName):
     sequenceClip = None
     # sequenceName = bpy.data.scenes[0].name
     # wkip mettre un RE match ici
-    act = sequenceName[0:5]
+    act = sequenceName[:5]
     filePath = (
         r"C:\_UAS_ROOT\RRSpecial\05_Acts\\" + act + r"\\" + sequenceName + r"\Shots\Main_Take\\" + sequenceName + ".mp4"
     )
 
     print(f" *** Seq filePath: {filePath}")
 
-    importSequenceAtFrame = 0
-
     # find if a marker exists with the name of the first shot
     markers = utils.sortMarkers(scene.timeline_markers, sequenceName)
-    if len(markers):
-        # if firstShotMarker is not None:
-        importSequenceAtFrame = markers[0].frame
-
+    importSequenceAtFrame = markers[0].frame if len(markers) else 0
     if not Path(filePath).exists():
         print(f" *** Sequence video file not found: {Path(filePath)}")
     else:

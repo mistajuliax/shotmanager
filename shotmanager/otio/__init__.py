@@ -19,6 +19,7 @@
 To do: module description here.
 """
 
+
 import os
 import importlib
 import subprocess
@@ -47,9 +48,12 @@ try:
         )
         importlib.reload(opentimelineio)  # Need to be tested.
 except ModuleNotFoundError:
-    _logger.error(f"*** Error - OpenTimelineIO import failed - using provided version")
+    _logger.error(
+        "*** Error - OpenTimelineIO import failed - using provided version"
+    )
+
     if platform.system() == platform.system() == "Windows":
-        _logger.error(f"Plateform: Windows")
+        _logger.error("Plateform: Windows")
         try:
             subprocess.run(
                 [
@@ -62,7 +66,7 @@ except ModuleNotFoundError:
             )
             import opentimelineio as opentimelineio
         except ModuleNotFoundError:
-            _logger.error(f"*** Error - OpenTimelineIO instal from provided version failed")
+            _logger.error("*** Error - OpenTimelineIO instal from provided version failed")
     else:
         subprocess.run([bpy.app.binary_path_python, "-m", "pip", "install", "opentimelineio"])
         import opentimelineio as opentimelineio

@@ -77,7 +77,7 @@ class UAS_ShotManager_OpenExplorer(Operator):
         if event.shift:
 
             def _copy_to_clipboard(txt):
-                cmd = "echo " + txt.strip() + "|clip"
+                cmd = f"echo {txt.strip()}|clip"
                 return subprocess.check_call(cmd, shell=True)
 
             _copy_to_clipboard(absPathToOpen)
@@ -109,7 +109,7 @@ class UAS_SM_Open_Documentation_Url(Operator):  # noqa 801
     def invoke(self, context, event):
         if event.shift:
             # copy path to clipboard
-            cmd = "echo " + (self.path).strip() + "|clip"
+            cmd = f"echo {(self.path).strip()}|clip"
             subprocess.check_call(cmd, shell=True)
         else:
             open_folder(self.path)

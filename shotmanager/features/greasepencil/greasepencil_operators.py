@@ -44,7 +44,10 @@ class UAS_ShotManager_OT_AddGreasePencil(Operator):
             return {"CANCELLED"}
         else:
             cam = scene.objects[self.cameraGpName]
-            utils.create_new_greasepencil(cam.name + "_GP", parent_object=cam, location=[0, 0, -0.2])
+            utils.create_new_greasepencil(
+                f"{cam.name}_GP", parent_object=cam, location=[0, 0, -0.2]
+            )
+
 
         return {"FINISHED"}
 
@@ -145,10 +148,11 @@ class UAS_ShotManager_OT_DrawOnGreasePencil(Operator):
 
         shot = None
         gp_child = None
-        if not ("SELECTED" == props.current_shot_properties_mode):
-            shot = props.getCurrentShot()
-        else:
-            shot = props.getShotByIndex(props.selected_shot_index)
+        shot = (
+            props.getShotByIndex(props.selected_shot_index)
+            if props.current_shot_properties_mode == "SELECTED"
+            else props.getCurrentShot()
+        )
 
         if shot is not None:
             if shot.camera is None:
@@ -191,7 +195,7 @@ class UAS_ShotManager_OT_RemoveGreasePencil(Operator):
         shotList = []
 
         print("Remove Grease Pencil: shotIndex: ", self.shotIndex)
-        if 0 > self.shotIndex:
+        if self.shotIndex < 0:
             take = context.scene.UAS_shot_manager_props.getCurrentTake()
             shotList = take.getShotList(ignoreDisabled=props.shotsGlobalSettings.alsoApplyToDisabledShots)
         else:

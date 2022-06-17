@@ -145,8 +145,10 @@ class UAS_ShotManager_FrameTimeRange(Operator):
                             # zoom is based on a constant (why that value of 1.6??? ) and the ui scale
                             # https://devtalk.blender.org/t/proper-way-to-draw-viewport-text-when-using-hi-dpi-displays/6804/4
                             delta = int(
-                                (regionWidthInPx - int(frameRange)) / (1.6 / bpy.context.preferences.view.ui_scale)
+                                (regionWidthInPx - frameRange)
+                                / (1.6 / bpy.context.preferences.view.ui_scale)
                             )
+
                             print(f"delta: {delta}")
                             print(f"delta 2: {region.width // 2 - (frameRange) // 2}")
                             bpy.ops.view2d.zoom(ctx, deltax=delta)

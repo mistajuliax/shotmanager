@@ -38,14 +38,13 @@ def convertVersionIntToStr(versionInt):
     """Convert an integer formated like 1023048 to a version string such as "1.23.48" """
     versionIntStr = str(versionInt)
     length = len(versionIntStr)
-    versionStr = (
+    return (
         str(int(versionIntStr[-1 * length : length - 6]))
         + "."
         + str(int(versionIntStr[-6 : length - 3]))
         + "."
         + str(int(versionIntStr[-3:length]))
     )
-    return versionStr
 
 
 def addonVersion(addonName):
@@ -68,7 +67,8 @@ def addonVersion(addonName):
     ]
     if len(versionTupple):
         versionTupple = versionTupple[0]
-        versionStr = str(versionTupple[0]) + "." + str(versionTupple[1]) + "." + str(versionTupple[2])
+        versionStr = f"{str(versionTupple[0])}.{str(versionTupple[1])}.{str(versionTupple[2])}"
+
 
         # versionStr = "131.258.265"
         versionInt = convertVersionStrToInt(versionStr)
@@ -128,7 +128,7 @@ class PropertyRestoreCtx:
         self.props = properties
 
     def __enter__(self):
-        self.backups = list()
+        self.backups = []
         for p in self.props:
             try:
                 self.backups.append((p[0], p[1], getattr(p[0], p[1])))
@@ -158,7 +158,7 @@ def ShowMessageBox(message="", title="Message Box", icon="INFO"):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        if "ERROR" == icon:
+        if icon == "ERROR":
             row.alert = True  # doesn't seem to work with popup_menu
         row.label(text=message)
 
@@ -241,15 +241,22 @@ def openMedia(media_filepath, inExternalPlayer=False):
 
 
 def getMarkerbyName(scene, markerName, filter=""):
-    for m in scene.timeline_markers:
-        if filter in m.name and markerName == m.name:
-            return m
-    return None
+    return next(
+        (
+            m
+            for m in scene.timeline_markers
+            if filter in m.name and markerName == m.name
+        ),
+        None,
+    )
 
 
 def sortMarkers(markers, filter=""):
-    sortedMarkers = [m for m in sorted(markers, key=lambda x: x.frame, reverse=False) if filter in m.name]
-    return sortedMarkers
+    return [
+        m
+        for m in sorted(markers, key=lambda x: x.frame, reverse=False)
+        if filter in m.name
+    ]
 
 
 def getFirstMarker(scene, frame, filter=""):
@@ -270,19 +277,12 @@ def getMarkerBeforeFrame(scene, frame, filter=""):
 
 def getMarkerAtFrame(scene, frame, filter=""):
     markers = sortMarkers(scene.timeline_markers, filter)
-    for m in markers:
-        # for m in scene.timeline_markers:
-        if frame == m.frame:
-            return m
-    return None
+    return next((m for m in markers if frame == m.frame), None)
 
 
 def getMarkerAfterFrame(scene, frame, filter=""):
     markers = sortMarkers(scene.timeline_markers, filter)
-    for m in markers:
-        if frame < m.frame:
-            return m
-    return None
+    return next((m for m in markers if frame < m.frame), None)
 
 
 def getLastMarker(scene, frame, filter=""):
@@ -301,7 +301,7 @@ def addMarkerAtFrame(scene, frame, name):
         marker = getMarkerAtFrame(scene, frame)
         marker.name = name
     else:
-        if "" == name:
+        if name == "":
             name = f"F_{scene.frame_current}"
         marker = scene.timeline_markers.new(name, frame=frame)
 
@@ -388,7 +388,7 @@ def duplicateObject(sourceObject, newName=None):
     else:
         (sourceObject.users_scene)[0].collection.objects.link(newObject)
 
-    if newName is not None and "" != newName:
+    if newName is not None and newName != "":
         newObject.name = newName
         newObject.data.name = newName
 
@@ -421,11 +421,7 @@ def create_new_greasepencil(gp_name, parent_object=None, location=None, locate_o
     if parent_object is not None:
         new_gp_obj.parent = parent_object
 
-    if location is None:
-        new_gp_obj.location = [0, 0, 0]
-    else:
-        new_gp_obj.location = location
-
+    new_gp_obj.location = [0, 0, 0] if location is None else location
     if locate_on_cursor:
         new_gp_obj.location = bpy.context.scene.cursor.location
 
@@ -453,14 +449,11 @@ def create_new_greasepencil(gp_name, parent_object=None, location=None, locate_o
 
 
 def get_greasepencil_child(obj, name_filter=""):
-    gpChild = None
-
-    if obj is not None:
-        if len(obj.children):
-            for c in obj.children:
-                if "GPENCIL" == c.type:
-                    return c
-    return gpChild
+    if obj is not None and len(obj.children):
+        for c in obj.children:
+            if c.type == "GPENCIL":
+                return c
+    return None
 
 
 ###################
@@ -470,8 +463,7 @@ def get_greasepencil_child(obj, name_filter=""):
 
 def cameras_from_scene(scene):
     """Return the list of all the cameras in the scene"""
-    camList = [c for c in scene.objects if c.type == "CAMERA"]
-    return camList
+    return [c for c in scene.objects if c.type == "CAMERA"]
 
 
 def setCurrentCameraToViewport2(area):
@@ -603,7 +595,7 @@ def add_background_video_to_cam(
 
         bg.display_depth = "FRONT"
         bg.frame_method = "CROP"
-        if -1 != alpha:
+        if alpha != -1:
             bg.alpha = alpha
 
         bg.clip_user.proxy_render_size = proxyRenderSize
@@ -650,7 +642,7 @@ def slightlyRandomizeColor(refColor, weight=0.8):
     from random import uniform
 
     newColor = [uniform(0, 1), uniform(0, 1), uniform(0, 1)]
-    for i in range(0, 3):
+    for i in range(3):
         newColor[i] = refColor[i] * weight + newColor[i] * (1.0 - weight)
 
     if len(refColor) == 4:
@@ -661,20 +653,27 @@ def slightlyRandomizeColor(refColor, weight=0.8):
 
 def darken_color(color):
     factor = 0.6
-    d_color = (color[0] * factor, color[1] * factor, color[2] * factor, color[3] * 1.0)
-    return d_color
+    return color[0] * factor, color[1] * factor, color[2] * factor, color[3] * 1.0
 
 
 def linearizeColor(color):
     gamma = 0.45
-    d_color = (pow(color[0], gamma), pow(color[1], gamma), pow(color[2], gamma), color[3] * 1.0)
-    return d_color
+    return (
+        pow(color[0], gamma),
+        pow(color[1], gamma),
+        pow(color[2], gamma),
+        color[3] * 1.0,
+    )
 
 
 def sRGBColor(color):
     gamma = 1.0 / 0.45
-    d_color = (pow(color[0], gamma), pow(color[1], gamma), pow(color[2], gamma), color[3] * 1.0)
-    return d_color
+    return (
+        pow(color[0], gamma),
+        pow(color[1], gamma),
+        pow(color[2], gamma),
+        color[3] * 1.0,
+    )
 
 
 ###################
@@ -683,10 +682,9 @@ def sRGBColor(color):
 
 
 def segment_is_in_range(segment_start, segment_end, range_start, range_end, partly_inside=True):
-    if partly_inside:
-        if segment_start < range_start:
-            return segment_end >= range_start
-        else:
-            return segment_start <= range_end  # < ?
-    else:
+    if not partly_inside:
         return segment_start >= range_start and segment_end <= range_end
+    if segment_start < range_start:
+        return segment_end >= range_start
+    else:
+        return segment_start <= range_end  # < ?

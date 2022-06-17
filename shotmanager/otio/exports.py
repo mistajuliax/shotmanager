@@ -123,13 +123,8 @@ def exportShotManagerEditToOtio(
         # print(f"dom1.toxml(): {dom1.toprettyxml()}")
         print(f"dom1.toxml(): {dom1.toxml()}")
 
-        file_handle = open(filename, "w")
-
-        dom1.writexml(file_handle)
-        # # print(f"dom1.toxml(): {dom1.toxml()}")
-        # # file_handle.write(dom1.toxml())
-
-        file_handle.close()
+        with open(filename, "w") as file_handle:
+            dom1.writexml(file_handle)
         dom1.unlink()
 
         return ()

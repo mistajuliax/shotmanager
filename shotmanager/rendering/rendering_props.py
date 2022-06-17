@@ -148,7 +148,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
         props = context.scene.UAS_shot_manager_props
         #  bpy.context.space_data.overlay.show_overlays = props.useOverlays
 
-        if "VERY_LOW" == renderQuality:
+        if renderQuality == "VERY_LOW":
             # eevee
             context.scene.eevee.taa_render_samples = 1
             #    context.scene.eevee.taa_samples = 1
@@ -160,9 +160,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
 
             # cycles
             context.scene.cycles.samples = 1
-        #    context.scene.cycles.preview_samples = 1
-
-        elif "LOW" == renderQuality:
+        elif renderQuality == "LOW":
             # eevee
             context.scene.eevee.taa_render_samples = 6
             #    context.scene.eevee.taa_samples = 2
@@ -174,9 +172,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
 
             # cycles
             context.scene.cycles.samples = 6
-        #    context.scene.cycles.preview_samples = 2
-
-        elif "MEDIUM" == renderQuality:
+        elif renderQuality == "MEDIUM":
             # eevee
             context.scene.eevee.taa_render_samples = 32  # 64
             #    context.scene.eevee.taa_samples = 6  # 16
@@ -188,9 +184,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
 
             # cycles
             context.scene.cycles.samples = 64
-        #    context.scene.cycles.preview_samples = 16
-
-        elif "HIGH" == renderQuality:
+        elif renderQuality == "HIGH":
             # eevee
             context.scene.eevee.taa_render_samples = 64  # 128
             #    context.scene.eevee.taa_samples = 12  # 32
@@ -202,13 +196,6 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
 
             # cycles
             context.scene.cycles.samples = 128
-        #    context.scene.cycles.preview_samples = 32
-
-        # CUSTOM
-        else:
-            # we use the scene settings
-            pass
-
         return
 
     def applyRenderQualitySettingsOpengl(self, context, renderQuality=None):
@@ -220,7 +207,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
         props = context.scene.UAS_shot_manager_props
         #  bpy.context.space_data.overlay.show_overlays = props.useOverlays
 
-        if "VERY_LOW" == renderQuality:
+        if renderQuality == "VERY_LOW":
             # eevee
             #    context.scene.eevee.taa_render_samples = 1
             context.scene.eevee.taa_samples = 1
@@ -234,7 +221,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
             #    context.scene.cycles.samples = 1
             context.scene.cycles.preview_samples = 1
 
-        elif "LOW" == renderQuality:
+        elif renderQuality == "LOW":
             # eevee
             #    context.scene.eevee.taa_render_samples = 6
             context.scene.eevee.taa_samples = 2
@@ -248,7 +235,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
             #    context.scene.cycles.samples = 6
             context.scene.cycles.preview_samples = 2
 
-        elif "MEDIUM" == renderQuality:
+        elif renderQuality == "MEDIUM":
             # eevee
             #    context.scene.eevee.taa_render_samples = 32  # 64
             context.scene.eevee.taa_samples = 6  # 16
@@ -262,7 +249,7 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
             #    context.scene.cycles.samples = 64
             context.scene.cycles.preview_samples = 16
 
-        elif "HIGH" == renderQuality:
+        elif renderQuality == "HIGH":
             # eevee
             #    context.scene.eevee.taa_render_samples = 64  # 128
             context.scene.eevee.taa_samples = 12  # 32
@@ -275,11 +262,6 @@ class UAS_ShotManager_RenderGlobalContext(PropertyGroup):
             # cycles
             #    context.scene.cycles.samples = 128
             context.scene.cycles.preview_samples = 32
-
-        # CUSTOM
-        else:
-            # we use the scene settings
-            pass
 
         return
 

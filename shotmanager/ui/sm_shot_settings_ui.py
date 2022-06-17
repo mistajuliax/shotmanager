@@ -54,10 +54,12 @@ class UAS_PT_ShotManager_ShotProperties(Panel):
     @classmethod
     def poll(cls, context):
         props = context.scene.UAS_shot_manager_props
-        if not ("SELECTED" == props.current_shot_properties_mode):
-            shot = props.getCurrentShot()
-        else:
-            shot = props.getShotByIndex(props.selected_shot_index)
+        shot = (
+            props.getShotByIndex(props.selected_shot_index)
+            if props.current_shot_properties_mode == "SELECTED"
+            else props.getCurrentShot()
+        )
+
         val = len(context.scene.UAS_shot_manager_props.getTakes()) and shot
         val = val and not props.dontRefreshUI()
         return val
@@ -69,7 +71,7 @@ class UAS_PT_ShotManager_ShotProperties(Panel):
         row = layout.row(align=True)
 
         propertiesModeStr = "Current Shot Properties"
-        if "SELECTED" == scene.UAS_shot_manager_props.current_shot_properties_mode:
+        if scene.UAS_shot_manager_props.current_shot_properties_mode == "SELECTED":
             propertiesModeStr = "Selected Shot Properties"
         row.label(text=propertiesModeStr)
 
@@ -79,10 +81,11 @@ class UAS_PT_ShotManager_ShotProperties(Panel):
         props = scene.UAS_shot_manager_props
         shot = None
         # if shotPropertiesModeIsCurrent is true then the displayed shot properties are taken from the CURRENT shot, else from the SELECTED one
-        if not ("SELECTED" == props.current_shot_properties_mode):
-            shot = props.getCurrentShot()
-        else:
-            shot = props.getShotByIndex(props.selected_shot_index)
+        shot = (
+            props.getShotByIndex(props.selected_shot_index)
+            if props.current_shot_properties_mode == "SELECTED"
+            else props.getCurrentShot()
+        )
 
         cameraIsValid = shot.isCameraValid()
         itemHasWarnings = not cameraIsValid
@@ -96,10 +99,11 @@ class UAS_PT_ShotManager_ShotProperties(Panel):
 
         if config.uasDebug and props.display_greasepencil_in_properties:
             shot = None
-            if not ("SELECTED" == props.current_shot_properties_mode):
-                shot = props.getCurrentShot()
-            else:
-                shot = props.getShotByIndex(props.selected_shot_index)
+            shot = (
+                props.getShotByIndex(props.selected_shot_index)
+                if props.current_shot_properties_mode == "SELECTED"
+                else props.getCurrentShot()
+            )
 
             if shot is not None:
                 if shot.camera is None:
@@ -130,10 +134,11 @@ class UAS_PT_ShotManager_ShotProperties(Panel):
 
         shot = None
         # if shotPropertiesModeIsCurrent is true then the displayed shot properties are taken from the CURRENT shot, else from the SELECTED one
-        if not ("SELECTED" == props.current_shot_properties_mode):
-            shot = props.getCurrentShot()
-        else:
-            shot = props.getShotByIndex(props.selected_shot_index)
+        shot = (
+            props.getShotByIndex(props.selected_shot_index)
+            if props.current_shot_properties_mode == "SELECTED"
+            else props.getCurrentShot()
+        )
 
         layout = self.layout
         layout.use_property_decorate = False

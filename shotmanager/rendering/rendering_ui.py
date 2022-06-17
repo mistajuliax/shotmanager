@@ -133,10 +133,10 @@ def draw3DRenderPanel(self, context):
     # box = row.box()
     box = layout.box()
 
-    if "OPENGL" == props.renderContext.renderHardwareMode:
-        grid = box.grid_flow(columns=2)
+    grid = box.grid_flow(columns=2)
 
-        row = grid.row(align=False)
+    row = grid.row(align=False)
+    if props.renderContext.renderHardwareMode == "OPENGL":
         row.alignment = "LEFT"
         # row.label(text="GPU Engine:")
         row.prop(props.renderContext, "renderEngineOpengl", text="GPU Engine")
@@ -150,9 +150,6 @@ def draw3DRenderPanel(self, context):
         row = box.row(align=False)
         row.prop(props.renderContext, "useOverlays", text="With Overlays")
     else:
-        grid = box.grid_flow(columns=2)
-
-        row = grid.row(align=False)
         row.alignment = "RIGHT"
         # row.label(text="CPU Engine:")
         row.prop(props.renderContext, "renderEngine", text="CPU Engine")
@@ -238,10 +235,9 @@ def draw3DRenderPanel(self, context):
 
         row = box.row()
         filePath = props.getCurrentShot().getOutputMediaPath(specificFrame=bpy.context.scene.frame_current)
-        row.label(text="Current Image: " + filePath)
+        row.label(text=f"Current Image: {filePath}")
         row.operator("uas_shot_manager.open_explorer", text="", icon_value=iconExplorer.icon_id).path = filePath
 
-    # ANIMATION ###
     elif props.displayAnimationProps:
         row = layout.row()
         row.label(text="Render Current Shot:")
@@ -266,10 +262,9 @@ def draw3DRenderPanel(self, context):
 
         row = box.row()
         filePath = props.getCurrentShot().getOutputMediaPath()
-        row.label(text="Current Video: " + filePath)
+        row.label(text=f"Current Video: {filePath}")
         row.operator("uas_shot_manager.open_explorer", text="", icon_value=iconExplorer.icon_id).path = filePath
 
-    # ALL EDITS ###
     elif props.displayAllEditsProps:
         row = layout.row()
         row.label(text="Render All:")
@@ -296,20 +291,16 @@ def draw3DRenderPanel(self, context):
         if display_bypass_options:
             row.prop(props.renderSettingsAll, "renderAlsoDisabled")
             row.prop(props.renderSettingsAll, "useStampInfo")
-            if props.use_project_settings:
-                row = subbox.row()
-            else:
-                row = box.row()
+            row = subbox.row() if props.use_project_settings else box.row()
             row.prop(props.renderSettingsAll, "renderAllTakes")
             row.prop(props.renderSettingsAll, "renderOtioFile")
 
         row = box.row()
         # filePath = props.getTakeOutputFilePath()
         filePath = props.getCurrentShot().getOutputMediaPath(provideName=False, provideExtension=False)
-        row.label(text="Rendering Folder: " + filePath)
+        row.label(text=f"Rendering Folder: {filePath}")
         row.operator("uas_shot_manager.open_explorer", text="", icon_value=iconExplorer.icon_id).path = filePath
 
-    # EDL ###
     elif props.displayOtioProps:
         row = layout.row()
         row.label(text="Render EDL File:")
@@ -332,16 +323,15 @@ def draw3DRenderPanel(self, context):
         # if addTakeNameToPath:
         filePath += take_name + "\\"
         # if "" == fileName:
-        filePath += take_name + ".xml"
+        filePath += f"{take_name}.xml"
         # else:
         #     otioRenderPath += fileName
         #     if Path(fileName).suffix == "":
         #         otioRenderPath += ".otio"
 
-        row.label(text="Current Take Edit: " + filePath)
+        row.label(text=f"Current Take Edit: {filePath}")
         row.operator("uas_shot_manager.open_explorer", text="", icon_value=iconExplorer.icon_id).path = filePath
 
-    # PLAYBLAST ###
     elif props.displayPlayblastProps:
         row = layout.row()
         row.label(text="Playblast:")
@@ -401,7 +391,7 @@ def draw3DRenderPanel(self, context):
         # row.prop(props.renderSettingsPlayblast, "renderCameraBG")
 
         row = box.row()
-        row.label(text="Playblast Video: " + filePath)
+        row.label(text=f"Playblast Video: {filePath}")
         row.operator("uas_shot_manager.open_explorer", text="", icon_value=iconExplorer.icon_id).path = str(
             Path(bpy.path.abspath(filePath))
         )

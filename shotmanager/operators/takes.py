@@ -89,14 +89,12 @@ class UAS_ShotManager_TakeAdd(Operator):
             col.label(text="Name (Base take):")
             col = grid_flow.column(align=False)
             col.enabled = False
-            col.prop(self, "name", text="")
         else:
             col = grid_flow.column(align=False)
             col.scale_x = 0.6
             col.label(text="New Take Name:")
             col = grid_flow.column(align=True)
-            col.prop(self, "name", text="")
-
+        col.prop(self, "name", text="")
         layout.separator()
         col.scale_x = 1.0
 
@@ -147,7 +145,7 @@ class UAS_ShotManager_TakeDuplicate(Operator):
             currentTake = context.scene.UAS_shot_manager_props.getCurrentTake()
             # name based on number of takes
             # self.newTakeName = f"Take_{len(context.scene.UAS_shot_manager_props.getTakes()) - 1 + 1:02}"
-            self.newTakeName = currentTake.name + "_duplicate"
+            self.newTakeName = f"{currentTake.name}_duplicate"
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
@@ -214,7 +212,7 @@ class UAS_ShotManager_TakeRemove(Operator):
         currentTakeInd = props["current_take_name"]
 
         if props["current_take_name"] == 0:
-            if 1 < len(props.takes):
+            if len(props.takes) > 1:
                 props.takes.remove(currentTakeInd)
                 props["current_take_name"] = 0
             else:
@@ -276,7 +274,7 @@ class UAS_ShotManager_TakeMoveUp(Operator):
             return False
 
         currentTakeInd = props.getCurrentTakeIndex()
-        return 1 < currentTakeInd
+        return currentTakeInd > 1
 
     def invoke(self, context, event):
         props = context.scene.UAS_shot_manager_props
@@ -302,7 +300,7 @@ class UAS_ShotManager_TakeMoveDown(Operator):
             return False
 
         currentTakeInd = props.getCurrentTakeIndex()
-        return len(takes) - 1 > currentTakeInd and currentTakeInd > 0
+        return len(takes) - 1 > currentTakeInd > 0
 
     def invoke(self, context, event):
         props = context.scene.UAS_shot_manager_props
@@ -327,7 +325,7 @@ class UAS_ShotManager_TakeAsMain(Operator):
             return False
 
         currentTakeInd = props.getCurrentTakeIndex()
-        return 0 < currentTakeInd
+        return currentTakeInd > 0
 
     def invoke(self, context, event):
         props = context.scene.UAS_shot_manager_props
@@ -338,9 +336,9 @@ class UAS_ShotManager_TakeAsMain(Operator):
         currentTakeInd = props.getCurrentTakeIndex()
 
         newInd = props.moveTakeToIndex(props.getCurrentTake(), 0, setAsMainTake=True)
-        if 0 == newInd:
+        if newInd == 0:
             previousMainTake = props.getTakeByIndex(1)
-            previousMainTake.name = "Ex - " + previousMainTake.name
+            previousMainTake.name = f"Ex - {previousMainTake.name}"
             newMainTake = props.getTakeByIndex(0)
             newMainTake.name = "Main Take"
 

@@ -16,7 +16,7 @@ sm_props = shot_manager.get_shot_manager(bpy.context.scene)
 current_file = bpy.data.filepath
 current_dir = os.path.dirname(current_file)
 
-if "" == current_file:
+if current_file == "":
     print("*** Save the scene first ***")
 
 # Export otio file from the specified scene to the directory containing the current file

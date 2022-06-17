@@ -30,9 +30,7 @@ def isRenderPathValid(scene):
 
     head, tail = os.path.split(filepath)
 
-    filePathIsValid = os.path.exists(head)
-
-    return filePathIsValid
+    return os.path.exists(head)
 
 
 class Utils_LaunchRender(Operator):
@@ -47,11 +45,11 @@ class Utils_LaunchRender(Operator):
 
     def execute(self, context):
 
-        if "STILL" == self.renderMode:
+        if self.renderMode == "STILL":
             #     bpy.ops.render.view_show()
             #     bpy.ops.render.render(use_viewport = True)
             bpy.ops.render.render("INVOKE_DEFAULT", animation=False, write_still=False)
-        elif "ANIMATION" == self.renderMode:
+        elif self.renderMode == "ANIMATION":
 
             bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
 

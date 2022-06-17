@@ -45,74 +45,24 @@ def parseOtioFile(otioFile):
     import os
 
     # get file names only
-    file_list = list()
+    file_list = []
     for item in media_list:
         filename = os.path.split(item)[1]
         file_list.append(os.path.splitext(filename)[0])
         # print(item)
 
     # get sequences
-    seq_list = list()
+    seq_list = []
     seq_pattern = "_seq"
     for item in file_list:
         if seq_pattern in item.lower():
             itemSplited = item.split("_")
-            if 2 <= len(itemSplited):
+            if len(itemSplited) >= 2:
                 seq_list.append(itemSplited[1])
 
     for item in seq_list:
         print(item)
     return
-
-    #### test get_media_occurence
-    ############
-    seq = "Seq0145"
-    seq = "05 "
-    # occ = get_media_occurence(timeline, seq, "ALL")
-    get_media_occurence(timeline, seq, track_type="ALL", last_occurence=True)
-    return
-
-    ############
-
-    # file name
-    print("Otio file: ", otioFile)
-
-    # framerate
-    time = timeline.duration()
-    rate = int(time.rate)
-    print("\n    Framerate: ", rate)
-
-    #############
-    # # video tracks
-    #############
-
-    # number
-    numVideoTracks = len(timeline.video_tracks())
-    print("\n    Video Tracks: ", numVideoTracks)
-
-    # list with index and name
-    for trackInd, editTrack in enumerate(timeline.video_tracks()):
-        print(f"     - {trackInd}: {editTrack.name}")
-
-    print("\n\n*******************")
-    for i in range(0, numVideoTracks):
-        parseTrack(timeline, "VIDEO", i)
-
-    #############
-    # audio tracks
-    #############
-
-    # number
-    numAudioTracks = len(timeline.audio_tracks())
-    print("\n    Audio Tracks: ", numAudioTracks)
-
-    # list with index and name
-    for trackInd, editTrack in enumerate(timeline.audio_tracks()):
-        print(f"     - {trackInd}: {editTrack.name}")
-
-    print("\n\n*******************")
-    for i in range(0, numVideoTracks):
-        parseTrack(timeline, "VIDEO", i)
 
 
 def get_timeline_from_file(otioFile):
@@ -131,10 +81,7 @@ def parseTrack(timeline, track_type, track_index):
         tab = "   "
         tab2 = "      "
 
-        ind = -1
-        for i, clip in enumerate(track.each_clip()):
-            ind += 1
-
+        for ind, clip in enumerate(track.each_clip()):
             # i not working
             print(f"\n{tab}Clip: {ind}, {clip.name}")
 
@@ -182,15 +129,18 @@ def get_media_occurence(timeline, media_name, track_type="ALL", last_occurence=F
         first_c = None
         ind = -1
         for track in tracks:
-            for i, clip in enumerate(track.each_clip()):
+            for clip in track.each_clip():
                 ind += 1
 
                 clip_name_l = clip.name.lower()
-                if media_name_l in clip_name_l:
-                    if first_c is None or get_clip_frame_final_start(clip) < get_clip_frame_final_start(first_c):
-                        first_c = clip
-                        print(f"\n{tab}Clip: {ind}, {clip.name}")
-                        break
+                if media_name_l in clip_name_l and (
+                    first_c is None
+                    or get_clip_frame_final_start(clip)
+                    < get_clip_frame_final_start(first_c)
+                ):
+                    first_c = clip
+                    print(f"\n{tab}Clip: {ind}, {first_c.name}")
+                    break
 
         return first_c
 
@@ -198,17 +148,18 @@ def get_media_occurence(timeline, media_name, track_type="ALL", last_occurence=F
         last_c = None
         ind = -1
         for track in tracks:
-            for i, clip in enumerate(track.each_clip()):
+            for clip in track.each_clip():
                 ind += 1
 
                 clip_name_l = clip.name.lower()
-                if media_name_l in clip_name_l:
-                    if last_c is None or get_timeline_clip_end_inclusive(clip) > get_timeline_clip_end_inclusive(
-                        last_c
-                    ):
-                        last_c = clip
-                        print(f"\n{tab}Clip: {ind}, {clip.name}")
-                        break
+                if media_name_l in clip_name_l and (
+                    last_c is None
+                    or get_timeline_clip_end_inclusive(clip)
+                    > get_timeline_clip_end_inclusive(last_c)
+                ):
+                    last_c = clip
+                    print(f"\n{tab}Clip: {ind}, {last_c.name}")
+                    break
 
         return last_c
 
@@ -331,11 +282,6 @@ def get_clip_frame_offset_end(clip, fps):
 
 
 def get_clip_frame_duration(clip, fps):
-    # get_clip_frame_end(clip) - get_clip_frame_start(clip)
-    # print("get_clip_duration: clip.available_range():", clip.available_range())
-    # computedDuration = clip.available_range().duration.value_rescaled_to(25)
-    # print("get_clip_duration: computedDuration:", computedDuration)
-    computedDuration = int(math.ceil((clip.available_range().duration.value_rescaled_to(fps))))
     # print("get_clip_duration: computedDuration:", computedDuration)
 
     # endExclusive = opentimelineio.opentime.to_frames(clip.range_in_parent().end_time_exclusive())
@@ -343,7 +289,7 @@ def get_clip_frame_duration(clip, fps):
 
     # endExclusive - get_clip_frame_start(clip)  # pb manque une frame!!
     # print("clip.duration_from_start_end_time():", clip.duration_from_start_end_time())
-    return computedDuration
+    return int(math.ceil((clip.available_range().duration.value_rescaled_to(fps))))
 
 
 def get_clip_frame_final_duration(clip, fps):
@@ -371,7 +317,7 @@ def get_media_list(timeline, track_type="ALL"):
     # if "ALL" == track_type or "VIDEO" == track_type:
 
     def _get_media_list(tracks):
-        m_list = list()
+        m_list = []
 
         for track in tracks:
             for clip in track:
@@ -404,11 +350,6 @@ def get_clips_in_range(timeline, track_type="ALL", mode="STRICTLY"):
         mode: "OVERLAPPING": start, end or frames inbetweens are in the range
         *** Warning: track owner is not kept at the moment ***
     """
-
-    if "ALL" == track_type or "VIDEO" == track_type:
-        pass
-    elif "ALL" == track_type or "AUDIO" == track_type:
-        pass
 
     return
 

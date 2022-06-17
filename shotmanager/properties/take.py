@@ -121,23 +121,15 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
         self.showNotes = source.showNotes
 
     def getName_PathCompliant(self):
-        takeName = self.name.replace(" ", "_")
-        return takeName
+        return self.name.replace(" ", "_")
 
     def getShotList(self, ignoreDisabled=False):
         """ Return a filtered copy of the shots associated to this take
         """
-        shotList = []
-
-        for shot in self.shots:
-            if not ignoreDisabled or shot.enabled:
-                shotList.append(shot)
-
-        return shotList
+        return [shot for shot in self.shots if not ignoreDisabled or shot.enabled]
 
     def _get_name(self):
-        val = self.get("name", "Take 00")
-        return val
+        return self.get("name", "Take 00")
 
     def _set_name(self, value):
         """ Set a unique name to the shot
@@ -165,29 +157,20 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
                 if shot.enabled:
                     numShots += 1
         else:
-            if self.shots is None:
-                numShots = 0
-            else:
-                numShots = len(self.shots)
+            numShots = 0 if self.shots is None else len(self.shots)
         return numShots
 
     def getShotsUsingCamera(self, cam, ignoreDisabled=False):
         """ Return the list of all the shots used by the specified camera
         """
-        shotList = []
-        for shot in self.shots:
-            if cam == shot.camera and (not ignoreDisabled or shot.enabled):
-                shotList.append(shot)
-
-        return shotList
+        return [
+            shot
+            for shot in self.shots
+            if cam == shot.camera and (not ignoreDisabled or shot.enabled)
+        ]
 
     def getShotsList(self, ignoreDisabled=False):
-        shotList = list()
-        for shot in self.shots:
-            if not ignoreDisabled or shot.enabled:
-                shotList.append(shot)
-
-        return shotList
+        return [shot for shot in self.shots if not ignoreDisabled or shot.enabled]
 
     def getEditShots(self, ignoreDisabled=True):
         return self.getShotsList(ignoreDisabled=ignoreDisabled)
@@ -219,11 +202,13 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
         """
         props = self.parentScene.UAS_shot_manager_props
         res = None
-        if props.use_project_settings and "FROM_PROJECT" == self.renderMode:
-            res = (props.project_resolution_x, props.project_resolution_y)
+        if props.use_project_settings and self.renderMode == "FROM_PROJECT":
+            return props.project_resolution_x, props.project_resolution_y
         else:
-            res = (self.outputParams_Resolution.resolution_x, self.outputParams_Resolution.resolution_y)
-        return res
+            return (
+                self.outputParams_Resolution.resolution_x,
+                self.outputParams_Resolution.resolution_y,
+            )
 
     #############
     # notes #####
@@ -238,7 +223,7 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
     note03: StringProperty(name="Note 3", description="")
 
     def hasNotes(self):
-        return "" != self.note01 or "" != self.note02 or "" != self.note03
+        return self.note01 != "" or self.note02 != "" or self.note03 != ""
 
     #############
     # interface for Montage #####
@@ -250,7 +235,6 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
         self.shotsList = self.shots
 
         print("__Init__ from Take")
-        pass
 
     def get_name(self):
         return self.name
@@ -273,9 +257,7 @@ class UAS_ShotManager_Take(SequenceInterface, PropertyGroup):
             print(f"  {sh.name}{offStr}")
 
     def getInfoAsDictionnary(self, shotsDetails=True):
-        dictSeq = dict()
-        dictSeq["duration"] = self.get_frame_duration()
-        dictSeq["shots"] = []
+        dictSeq = {"duration": self.get_frame_duration(), "shots": []}
         for shot in self.getEditShots():
             dictSeq["shots"].append(shot.getInfoAsDictionnary(shotsDetails=shotsDetails))
 

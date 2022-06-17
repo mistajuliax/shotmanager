@@ -38,19 +38,20 @@ def open_folder(path):
 
 
 def delete_folder(dir_path):
-    if os.path.exists(dir_path):
-        files_in_directory = os.listdir(dir_path)
-        # filtered_files = [file for file in files_in_directory if file.endswith(".png") or file.endswith(".wav")]
+    if not os.path.exists(dir_path):
+        return
+    files_in_directory = os.listdir(dir_path)
+    # filtered_files = [file for file in files_in_directory if file.endswith(".png") or file.endswith(".wav")]
 
-        for file in files_in_directory:
-            path_to_file = os.path.join(dir_path, file)
-            try:
-                os.remove(path_to_file)
-            except Exception:
-                # _logger.exception(f"\n*** File locked (by system?): {path_to_file}")
-                print(f"\n*** File locked (by system?): {path_to_file}")
+    for file in files_in_directory:
+        path_to_file = os.path.join(dir_path, file)
         try:
-            os.rmdir(dir_path)
+            os.remove(path_to_file)
         except Exception:
-            print("Cannot delete Dir: ", dir_path)
+            # _logger.exception(f"\n*** File locked (by system?): {path_to_file}")
+            print(f"\n*** File locked (by system?): {path_to_file}")
+    try:
+        os.rmdir(dir_path)
+    except Exception:
+        print("Cannot delete Dir: ", dir_path)
 

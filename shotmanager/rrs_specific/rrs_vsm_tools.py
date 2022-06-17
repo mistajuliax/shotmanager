@@ -61,12 +61,11 @@ class UAS_PT_RRSVSMTools(Panel):
     @classmethod
     def poll(cls, context):
         scene = context.scene
-        val = not (
+        return not (
             scene.name.startswith("Act01_Seq")
             or scene.name.startswith("Act02_Seq")
             or scene.name.startswith("Act03_Seq")
         )
-        return val
 
     def draw(self, context):
         scene = context.scene
@@ -99,7 +98,7 @@ class UAS_PT_RRSVSMTools(Panel):
                     or bpy.data.scenes[0].name.startswith("Act02_Seq")
                     or bpy.data.scenes[0].name.startswith("Act03_Seq")
                 )
-                or "RRS_CheckSequence" == scene.name
+                or scene.name == "RRS_CheckSequence"
             ):
                 box.separator(factor=0.1)
                 row = box.row()
@@ -173,13 +172,13 @@ class UAS_VideoShotManager_OT_RRS_ExportShotsFromEdit(Operator):
         #         self.mediaHandlesDuration = argsDict["mediaHandlesDuration"]
 
         config.gMontageOtio = None
-        if "" != self.otioFile and Path(self.otioFile).exists():
+        if self.otioFile != "" and Path(self.otioFile).exists():
             config.gMontageOtio = MontageOtio()
             config.gMontageOtio.fillMontageInfoFromOtioFile(
                 otioFile=self.otioFile, refVideoTrackInd=0, verboseInfo=False
             )
 
-            config.gSeqEnumList = list()
+            config.gSeqEnumList = []
             print(f"config.gMontageOtio name: {config.gMontageOtio.get_name()}")
             for i, seq in enumerate(config.gMontageOtio.sequencesList):
                 print(f"- seqList: i:{i}, seq: {seq.get_name()}")
@@ -203,7 +202,7 @@ class UAS_VideoShotManager_OT_RRS_ExportShotsFromEdit(Operator):
         box.label(text="OTIO File")
         box.prop(self, "otioFile", text="")
 
-        if "" == self.otioFile or not Path(self.otioFile).exists():
+        if self.otioFile == "" or not Path(self.otioFile).exists():
             row = box.row()
             row.alert = True
             row.label(text="Specified EDL file not found! - Verify your local depot")  # wkip rrs specific
@@ -325,13 +324,17 @@ class UAS_VideoShotManager_OT_RRS_CheckSequence(Operator):
         #         self.mediaHandlesDuration = argsDict["mediaHandlesDuration"]
 
         config.gMontageOtio = None
-        if self.importMarkers and "" != self.otioFile and Path(self.otioFile).exists():
+        if (
+            self.importMarkers
+            and self.otioFile != ""
+            and Path(self.otioFile).exists()
+        ):
             config.gMontageOtio = MontageOtio()
             config.gMontageOtio.fillMontageInfoFromOtioFile(
                 otioFile=self.otioFile, refVideoTrackInd=0, verboseInfo=False
             )
 
-            config.gSeqEnumList = list()
+            config.gSeqEnumList = []
             print(f"config.gMontageOtio name: {config.gMontageOtio.get_name()}")
             for i, seq in enumerate(config.gMontageOtio.sequencesList):
                 print(f"- seqList: i:{i}, seq: {seq.get_name()}")
@@ -339,9 +342,6 @@ class UAS_VideoShotManager_OT_RRS_CheckSequence(Operator):
 
             self.sequenceList = config.gSeqEnumList[0][0]
 
-        if False:
-            return {wm.invoke_props_dialog(self, width=500)}
-            # return {"RUNNING_MODAL"}
         return self.execute(context)
 
     def draw(self, context):
@@ -357,7 +357,7 @@ class UAS_VideoShotManager_OT_RRS_CheckSequence(Operator):
         box.label(text="OTIO File")
         box.prop(self, "otioFile", text="")
 
-        if "" == self.otioFile or not Path(self.otioFile).exists():
+        if self.otioFile == "" or not Path(self.otioFile).exists():
             row = box.row()
             row.alert = True
             row.label(text="Specified EDL file not found! - Verify your local depot")  # wkip rrs specific
@@ -410,7 +410,7 @@ class UAS_VideoShotManager_OT_RRS_CheckSequence(Operator):
 
     def execute(self, context):
 
-        playblastInfos = dict()
+        playblastInfos = {}
 
         rrs_animatic_to_vsm(
             editVideoFile=self.editVideoFile, montageOtio=config.gMontageOtio, importMarkers=self.importMarkers,
@@ -449,8 +449,14 @@ class UAS_VideoShotManager_GoToSequenceScene(Operator):
 def list_sequences_from_markers(self, context):
     res = config.gSeqEnumList
     # res = list()
-    nothingList = list()
-    nothingList.append(("NO_SEQ", "No Sequence Found", "No sequence found in the specified EDL file", 0))
+    nothingList = [
+        (
+            "NO_SEQ",
+            "No Sequence Found",
+            "No sequence found in the specified EDL file",
+            0,
+        )
+    ]
 
     # seqList = getSequenceListFromOtioTimeline(config.gMontageOtio)
     # for i, item in enumerate(seqList):
@@ -463,7 +469,7 @@ def list_sequences_from_markers(self, context):
     #         (cam.name, cam.name, 'Use the exising scene camera named "' + cam.name + '"\nfor the new shot', i + 1)
     #     )
 
-    if res is None or 0 == len(res):
+    if res is None or len(res) == 0:
         res = nothingList
     return res
 
@@ -488,7 +494,7 @@ class UAS_VideoShotManager_ImportPublishedSequence(Operator):
 
         # parse the markers to get the shots list
         previzMarkers = scene.timeline_markers
-        seqNames = list()
+        seqNames = []
         currentSeqName = ""
         # if bpy.data.scenes[0].name.startswith("Act"):  # wkip re match
         if utils_rrs.start_with_act(bpy.data.scenes[0].name):  # wkip re match
@@ -496,10 +502,10 @@ class UAS_VideoShotManager_ImportPublishedSequence(Operator):
         print(f"Current seq name: {currentSeqName}")
         currentSeqIndex = -1
         seqInd = -1
-        config.gSeqEnumList = list()
-        for i, m in enumerate(previzMarkers):
+        config.gSeqEnumList = []
+        for m in previzMarkers:
             if utils_rrs.start_with_seq(m.name):
-                seqName = m.name[0:13]
+                seqName = m.name[:13]
                 seqNameShort = m.name[6:13]
                 if seqName not in seqNames:
                     seqNames.append(seqName)
@@ -512,10 +518,16 @@ class UAS_VideoShotManager_ImportPublishedSequence(Operator):
 
         if not len(config.gSeqEnumList):
             config.gSeqEnumList.append(
-                (str(0), " ** No Sequence in the markers list **", f"No sequence found in the markers list", 1)
+                (
+                    str(0),
+                    " ** No Sequence in the markers list **",
+                    "No sequence found in the markers list",
+                    1,
+                )
             )
 
-        if -1 != currentSeqIndex:
+
+        if currentSeqIndex != -1:
             self.sequenceList = config.gSeqEnumList[currentSeqIndex][0]
         else:
             self.sequenceList = config.gSeqEnumList[0][0]

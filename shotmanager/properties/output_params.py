@@ -43,9 +43,11 @@ class UAS_ShotManager_OutputParams_Resolution(PropertyGroup):
 
     def _update_resolution(self, context):
         props = bpy.context.scene.UAS_shot_manager_props
-        if props is not None:
-            if self == props.getCurrentTake().outputParams_Resolution:
-                props.setResolutionToScene()
+        if (
+            props is not None
+            and self == props.getCurrentTake().outputParams_Resolution
+        ):
+            props.setResolutionToScene()
 
     resolution_x: IntProperty(name="Res. X", min=0, default=1280, update=_update_resolution)
     resolution_y: IntProperty(name="Res. Y", min=0, default=720, update=_update_resolution)
@@ -53,10 +55,8 @@ class UAS_ShotManager_OutputParams_Resolution(PropertyGroup):
     resolution_framed_y: IntProperty(name="Res. Framed Y", min=0, default=960)
 
     def get_useStampInfoDuringRendering(self):
-        #  return self.useStampInfoDuringRendering
-        val = self.get("useStampInfoDuringRendering", True)
         # print("*** get_useStampInfoDuringRendering: value: ", val)
-        return val
+        return self.get("useStampInfoDuringRendering", True)
 
     def set_useStampInfoDuringRendering(self, value):
         print("*** set_useStampInfoDuringRendering: value: ", value)

@@ -71,20 +71,20 @@ class UAS_ShotManager_EnableDisableAll(Operator):
             enableMode = "INVERT"
         elif event.alt and not event.shift and not event.ctrl:
             enableMode = "ENABLEONLYCSELECTED"
-        elif not event.alt and not event.shift and not event.ctrl:
+        elif not event.alt:
             enableMode = "ENABLEALL" if prefs.toggleShotsEnabledState else "DISABLEALL"
             prefs.toggleShotsEnabledState = not prefs.toggleShotsEnabledState
 
         selectedShot = props.getSelectedShot()
         shotsList = props.getShotsList()
         for shot in shotsList:
-            if "ENABLEALL" == enableMode:
+            if enableMode == "ENABLEALL":
                 shot.enabled = True
-            elif "DISABLEALL" == enableMode:
+            elif enableMode == "DISABLEALL":
                 shot.enabled = False
-            elif "INVERT" == enableMode:
+            elif enableMode == "INVERT":
                 shot.enabled = not shot.enabled
-            elif "ENABLEONLYCSELECTED" == enableMode:
+            elif enableMode == "ENABLEONLYCSELECTED":
                 shot.enabled = shot == selectedShot
 
         props.setSelectedShot(selectedShot)
@@ -146,7 +146,7 @@ class UAS_ShotManager_SceneRangeFrom3DEdit(Operator):
 
         shotList = props.getShotsList(ignoreDisabled=True)
 
-        if 0 < len(shotList):
+        if len(shotList) > 0:
             scene.use_preview_range = True
             scene.frame_preview_start = shotList[0].start
             scene.frame_preview_end = shotList[len(shotList) - 1].end

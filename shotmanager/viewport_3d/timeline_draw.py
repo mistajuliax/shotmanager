@@ -175,14 +175,12 @@ class ShotClip:
             self.shot.end += mouse_disp
         elif region == -1:
             self.shot.start += mouse_disp
+        elif mouse_disp > 0:
+            self.shot.end += mouse_disp
+            self.shot.start += mouse_disp
         else:
-            # Very important, don't use properties for changing both start and ends. Depending of the amount of displacement duration can change.
-            if mouse_disp > 0:
-                self.shot.end += mouse_disp
-                self.shot.start += mouse_disp
-            else:
-                self.shot.start += mouse_disp
-                self.shot.end += mouse_disp
+            self.shot.start += mouse_disp
+            self.shot.end += mouse_disp
 
     def update(self):
         self.width = self.shot.end - self.shot.start + 1
@@ -205,7 +203,7 @@ class UAS_ShotManager_DrawMontageTimeline(bpy.types.Operator):
         self.draw_event = None
 
         self.sm_props = None
-        self.clips = list()
+        self.clips = []
         self.context = None
 
         self.prev_mouse_x = 0

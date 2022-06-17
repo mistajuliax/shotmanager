@@ -84,35 +84,34 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
 
                 if item.hasNotes():
                     icon = config.icons_col["ShotManager_NotesData_32"]
-                    row.operator("uas_shot_manager.shots_shownotes", text="", icon_value=icon.icon_id).index = index
                 else:
                     icon = config.icons_col["ShotManager_NotesNoData_32"]
-                    row.operator("uas_shot_manager.shots_shownotes", text="", icon_value=icon.icon_id).index = index
-                    # emptyIcon = config.icons_col["General_Empty_32"]
-                    # row.operator(
-                    #     "uas_shot_manager.shots_shownotes", text="", icon_value=emptyIcon.icon_id
-                    # ).index = index
+                                # emptyIcon = config.icons_col["General_Empty_32"]
+                                # row.operator(
+                                #     "uas_shot_manager.shots_shownotes", text="", icon_value=emptyIcon.icon_id
+                                # ).index = index
+                row.operator("uas_shot_manager.shots_shownotes", text="", icon_value=icon.icon_id).index = index
                 row.scale_x = 0.9
 
-            if props.display_cameraBG_in_shotlist:
-                row = row.row(align=True)
-                row.scale_x = 1.0
-                icon = "VIEW_CAMERA" if item.hasBGImage() else "BLANK1"
-                row.operator("uas_shot_manager.cambgitem", text="", icon=icon).index = index
-                row.scale_x = 0.9
+        if props.display_cameraBG_in_shotlist:
+            row = row.row(align=True)
+            row.scale_x = 1.0
+            icon = "VIEW_CAMERA" if item.hasBGImage() else "BLANK1"
+            row.operator("uas_shot_manager.cambgitem", text="", icon=icon).index = index
+            row.scale_x = 0.9
 
-            if props.display_greasepencil_in_shotlist:
-                row = row.row(align=True)
-                row.scale_x = 1.0
-                icon = "OUTLINER_OB_GREASEPENCIL" if item.hasGreasePencil() else "BLANK1"
-                row.operator("uas_shot_manager.greasepencilitem", text="", icon=icon).index = index
-                row.scale_x = 0.9
+        if props.display_greasepencil_in_shotlist:
+            row = row.row(align=True)
+            row.scale_x = 1.0
+            icon = "OUTLINER_OB_GREASEPENCIL" if item.hasGreasePencil() else "BLANK1"
+            row.operator("uas_shot_manager.greasepencilitem", text="", icon=icon).index = index
+            row.scale_x = 0.9
 
-            if props.display_color_in_shotlist:
-                row = row.row(align=True)
-                row.scale_x = 0.2
-                row.prop(item, "color", text="")
-                row.scale_x = 0.45
+        if props.display_color_in_shotlist:
+            row = row.row(align=True)
+            row.scale_x = 0.2
+            row.prop(item, "color", text="")
+            row.scale_x = 0.45
 
         row = layout.row(align=True)
 
@@ -145,13 +144,13 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
 
             grid_flow.scale_x = 0.4
             shotEditStart = item.getEditStart()
-            if currentFrame == item.start:
-                if props.highlight_all_shot_frames or current_shot_index == index:
-                    grid_flow.alert = True
+            if currentFrame == item.start and (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ):
+                grid_flow.alert = True
             # grid_flow.prop(item, "start", text="")
             # grid_flow.label(text=str(shotDuration))
             grid_flow.operator("uas_shot_manager.shottimeinedit", text=str(shotEditStart)).shotSource = f"[{index},0]"
-            grid_flow.alert = False
         else:
             grid_flow.scale_x = button_x_factor
             if props.display_getsetcurrentframe_in_shotlist:
@@ -160,12 +159,12 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
                 ).shotSource = f"[{index},0]"
 
             grid_flow.scale_x = 0.4
-            if currentFrame == item.start:
-                if props.highlight_all_shot_frames or current_shot_index == index:
-                    grid_flow.alert = True
+            if currentFrame == item.start and (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ):
+                grid_flow.alert = True
             grid_flow.prop(item, "start", text="")
-            grid_flow.alert = False
-
+        grid_flow.alert = False
         # duration
         ###########
 
@@ -180,9 +179,10 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
                 toggle=True,
             )
 
-            if props.highlight_all_shot_frames or current_shot_index == index:
-                if item.start <= currentFrame and currentFrame <= item.end:
-                    grid_flow.alert = True
+            if (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ) and item.start <= currentFrame <= item.end:
+                grid_flow.alert = True
 
             if props.display_duration_in_shotlist:
                 grid_flow.scale_x = 0.3
@@ -194,27 +194,28 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
         else:
             grid_flow.scale_x = 1.5
 
+        grid_flow.scale_x = 0.4
         # end
         ###########
         if props.display_edit_times_in_shotlist:
-            grid_flow.scale_x = 0.4
             shotEditEnd = item.getEditEnd()
-            if currentFrame == item.end:
-                if props.highlight_all_shot_frames or current_shot_index == index:
-                    grid_flow.alert = True
+            if currentFrame == item.end and (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ):
+                grid_flow.alert = True
             grid_flow.operator("uas_shot_manager.shottimeinedit", text=str(shotEditEnd)).shotSource = f"[{index},1]"
             grid_flow.alert = False
 
-            # grid_flow.scale_x = button_x_factor - 0.2
-            # if props.display_getsetcurrentframe_in_shotlist:
-            #     grid_flow.operator(
-            #         "uas_shot_manager.getsetcurrentframe", text="", icon="TRIA_DOWN_BAR"
-            #     ).shotSource = f"[{index},1]"
+                # grid_flow.scale_x = button_x_factor - 0.2
+                # if props.display_getsetcurrentframe_in_shotlist:
+                #     grid_flow.operator(
+                #         "uas_shot_manager.getsetcurrentframe", text="", icon="TRIA_DOWN_BAR"
+                #     ).shotSource = f"[{index},1]"
         else:
-            grid_flow.scale_x = 0.4
-            if currentFrame == item.end:
-                if props.highlight_all_shot_frames or current_shot_index == index:
-                    grid_flow.alert = True
+            if currentFrame == item.end and (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ):
+                grid_flow.alert = True
             grid_flow.prop(item, "end", text="")
             grid_flow.alert = False
 
@@ -239,17 +240,14 @@ class UAS_UL_ShotManager_Items(bpy.types.UIList):
                 toggle=True,
             )
 
-            if props.highlight_all_shot_frames or current_shot_index == index:
-                if item.start <= currentFrame and currentFrame <= item.end:
-                    grid_flow.alert = True
+            if (
+                props.highlight_all_shot_frames or current_shot_index == index
+            ) and item.start <= currentFrame <= item.end:
+                grid_flow.alert = True
 
             if props.display_duration_in_shotlist:
                 grid_flow.scale_x = 0.6
                 grid_flow.prop(item, "duration_fp", text="")
-            else:
-                pass
-                # grid_flow.scale_x = 0.1
-                # grid_flow.operator("uas_shot_manager.shot_duration", text="").index = index
             grid_flow.alert = False
 
         # camera

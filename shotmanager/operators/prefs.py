@@ -125,9 +125,6 @@ class UAS_ShotManager_General_Prefs(Operator):
             row = layout.row()
             row.alert = True
             row.label(text="Overriden by Project Settings:")
-        else:
-            # layout.label(text="Others")
-            pass
         box = layout.box()
         box.use_property_decorate = False
         box.enabled = not props.use_project_settings

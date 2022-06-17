@@ -78,7 +78,7 @@ def set_StampInfoSettings(scene):
             # logo
 
             if props.use_project_settings:
-                if "" == props.project_logo_path:
+                if props.project_logo_path == "":
                     # no logo used at all because none specified
                     stampInfoSettings.logoUsed = False
                 else:

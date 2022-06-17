@@ -47,12 +47,9 @@ def remap(value, old_min, old_max, new_min, new_max):
     value = clamp(value, old_min, old_max)
     old_range = old_max - old_min
     if old_range == 0:
-        new_value = new_min
-    else:
-        new_range = new_max - new_min
-        new_value = (((value - old_min) * new_range) / old_range) + new_min
-
-    return new_value
+        return new_min
+    new_range = new_max - new_min
+    return (((value - old_min) * new_range) / old_range) + new_min
 
 
 def clamp(value, minimum, maximum):
@@ -61,14 +58,17 @@ def clamp(value, minimum, maximum):
 
 def darken_color(color):
     factor = 0.6
-    d_color = (color[0] * factor, color[1] * factor, color[2] * factor, color[3] * 1.0)
-    return d_color
+    return color[0] * factor, color[1] * factor, color[2] * factor, color[3] * 1.0
 
 
 def gamma_color(color):
     gamma = 0.45
-    d_color = (pow(color[0], gamma), pow(color[1], gamma), pow(color[2], gamma), color[3] * 1.0)
-    return d_color
+    return (
+        pow(color[0], gamma),
+        pow(color[1], gamma),
+        pow(color[2], gamma),
+        color[3] * 1.0,
+    )
 
 
 #
@@ -494,7 +494,7 @@ class BL_UI_Timeline:
         self.__inrect = False
         self._mouse_down = False
 
-        self.ui_shots = list()
+        self.ui_shots = []
         self.frame_cursor = BL_UI_Cursor(self.frame_cursor_moved)
 
     def set_location(self, x, y):
@@ -579,7 +579,7 @@ class BL_UI_Timeline:
         currentShotIndex = props.getCurrentShotIndex(ignoreDisabled=not props.display_disabledshots_in_timeline)
 
         self.ui_shots.clear()
-        total_range += sum([s.end + 1 - s.start for s in shots])
+        total_range += sum(s.end + 1 - s.start for s in shots)
         offset_x = 0
         for i, shot in enumerate(shots):
             size_x = int(self.width * float(shot.end + 1 - shot.start) / total_range)
@@ -600,11 +600,10 @@ class BL_UI_Timeline:
                     caret_color = (1.0, 0.1, 0.1, 1)
                     self.draw_frame_caret(caret_pos, frame_width, darken_color(caret_color))
                     self.draw_caret(caret_pos, caret_color)
-            else:
-                if shot.start <= self.context.scene.frame_current and self.context.scene.frame_current <= shot.end:
-                    caret_color = (0.1, 1.0, 0.1, 1)
-                    self.draw_frame_caret(caret_pos, frame_width, darken_color(caret_color))
-                    self.draw_caret(caret_pos, caret_color)
+            elif shot.start <= self.context.scene.frame_current <= shot.end:
+                caret_color = (0.1, 1.0, 0.1, 1)
+                self.draw_frame_caret(caret_pos, frame_width, darken_color(caret_color))
+                self.draw_caret(caret_pos, caret_color)
 
             offset_x += int(self.width * float(shot.end + 1 - shot.start) / total_range)
 
@@ -809,5 +808,5 @@ class UAS_ShotManager_DrawTimeline(bpy.types.Operator):
             for widget in self.widgets:
                 widget.draw()
         except Exception as e:
-            _logger.error(f"*** Crash in ogl context ***")
+            _logger.error("*** Crash in ogl context ***")
 
